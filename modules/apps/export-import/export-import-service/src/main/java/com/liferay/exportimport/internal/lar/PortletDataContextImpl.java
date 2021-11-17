@@ -41,6 +41,7 @@ import com.liferay.exportimport.kernel.lar.UserIdStrategy;
 import com.liferay.exportimport.kernel.xstream.XStreamAlias;
 import com.liferay.exportimport.kernel.xstream.XStreamConverter;
 import com.liferay.exportimport.kernel.xstream.XStreamType;
+import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -489,7 +490,7 @@ public class PortletDataContextImpl implements PortletDataContext {
 		try {
 			ZipWriter zipWriter = getZipWriter();
 
-			zipWriter.addEntry(path, inputStream);
+			zipWriter.addEntry(path, StreamUtil.toByteArray(inputStream));
 		}
 		catch (IOException ioException) {
 			ExportImportIOException exportImportIOException =
