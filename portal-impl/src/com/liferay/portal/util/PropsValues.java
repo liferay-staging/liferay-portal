@@ -3252,6 +3252,10 @@ public class PropsValues {
 		GetterUtil.getInteger(
 			PropsUtil.get(PropsKeys.YUI_COMPRESSOR_CSS_LINE_BREAK));
 
+	public static final long ZIP_EXPORT_MAX_BYTES_ALLOWED_IN_MEMORY =
+		GetterUtil.getLong(
+			PropsUtil.get(PropsKeys.ZIP_EXPORT_MAX_BYTES_ALLOWED_IN_MEMORY));
+
 	public static final String ZIP_FILE_NAME_ENCODING = GetterUtil.getString(
 		PropsUtil.get(PropsKeys.ZIP_FILE_NAME_ENCODING));
 
