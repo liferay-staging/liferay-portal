@@ -1380,13 +1380,20 @@ definition {
 		else {
 			WaitForElementNotPresent(locator1 = "Staging#PROCESS_IN_PROGRESS");
 
-			WaitForElementNotPresent(
-				key_title = "Current",
-				locator1 = "Staging#PROCESS_GROUP_TITLE");
+			if (IsElementPresent(locator1 = "Modal#HEADER")) {
+				AssertTextEquals(
+					locator1 = "Staging#PROCESS_RESULT",
+					value1 = "Successful");
+			}
+			else {
+				WaitForElementNotPresent(
+					key_title = "Current",
+					locator1 = "Staging#PROCESS_GROUP_TITLE");
 
-			AssertTextEquals(
-				locator1 = "Staging#PROCESS_SUCCESSFUL",
-				value1 = "Successful");
+				AssertTextEquals(
+					locator1 = "Staging#LATEST_PROCESS_RESULT",
+					value1 = "Successful");
+			}
 		}
 
 		if (isSet(validateErrorMessage)) {
