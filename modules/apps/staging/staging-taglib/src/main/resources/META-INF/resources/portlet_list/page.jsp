@@ -23,6 +23,15 @@
 	<%
 	DateRange dateRange = null;
 
+	if (useRequestValues) {
+		dateRange = ExportImportDateUtil.getDateRange(renderRequest, exportGroupId, privateLayout, 0, null, defaultRange);
+	}
+	else {
+		dateRange = ExportImportDateUtil.getDateRange(exportImportConfiguration, null);
+	}
+
+	PortletDataContext portletDataContext = PortletDataContextFactoryUtil.createPreparePortletDataContext(company.getCompanyId(), exportGroupId, (range != null) ? range : defaultRange, dateRange.getStartDate(), dateRange.getEndDate());
+
 	for (Portlet portlet : portlets) {
 		if (!type.equals(Constants.EXPORT) && (liveGroup != null) && !liveGroup.isStagedPortlet(portlet.getRootPortletId())) {
 			continue;
@@ -57,15 +66,6 @@
 		if (ArrayUtil.isEmpty(exportControls) && ArrayUtil.isEmpty(metadataControls)) {
 			continue;
 		}
-
-		if (useRequestValues) {
-			dateRange = ExportImportDateUtil.getDateRange(renderRequest, exportGroupId, privateLayout, 0, null, defaultRange);
-		}
-		else {
-			dateRange = ExportImportDateUtil.getDateRange(exportImportConfiguration, null);
-		}
-
-		PortletDataContext portletDataContext = PortletDataContextFactoryUtil.createPreparePortletDataContext(company.getCompanyId(), exportGroupId, (range != null) ? range : defaultRange, dateRange.getStartDate(), dateRange.getEndDate());
 
 		portletDataHandler.prepareManifestSummary(portletDataContext);
 
