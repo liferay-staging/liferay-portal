@@ -175,6 +175,40 @@ definition {
 		AssetPublisherPortlet.viewAssetPG(assetTitle = "WC WebContent Title");
 	}
 
+	@description = "This is a use case for LPS-141974. Verify a user cannot create a duplicate friendlyURL after switching localization."
+	@priority = "3"
+	test CannotCreateDuplicateFriendlyURLWithDifferentLocale {
+		task ("Given a user navigates to a page's configuration") {
+			PagesAdmin.openToConfigurePublicPage(
+				groupName = "Test Site Name",
+				layoutName = "Test Source Page",
+				siteURLKey = "test-site-name");
+		}
+
+		task ("When a user attempts to use an existing friendlyURL under a different localization/translation") {
+			PagesAdmin.editFriendlyURL(friendlyURLEdit = "/test1");
+
+			PortletEntry.changeLocale(
+				fieldName = "Friendly URL",
+				locale = "es-ES");
+
+			PortletEntry.inputName(name = "Test Source Page(ES)");
+
+			Type(
+				inputFieldId = "friendlyURL",
+				locator1 = "TextInput#INPUT_ID",
+				value1 = "/test1");
+
+			Button.clickSave();
+		}
+
+		task ("Then an error is displayed indicating a user must use a unique friendlyURL") {
+			AssertTextEquals.assertPartialText(
+				locator1 = "Message#ERROR_1",
+				value1 = "Please enter a unique friendly URL.");
+		}
+	}
+
 	@description = "This ensures that a user is redirected to the updated friendlyURL when he accesses the former friendlyURL."
 	@priority = "5"
 	test CanRedirectToUpdatedFriendlyURL {
