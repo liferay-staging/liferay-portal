@@ -609,6 +609,42 @@ definition {
 		AssetPublisherPortlet.viewAssetPG(assetTitle = "WC WebContent Title");
 	}
 
+	@description = "This is a use case for LPS-142466. Verify that default friendlyURL is not renamed to one under a different translation when submitting a blank URL."
+	@priority = "3"
+	test DefaultFriendlyURLNotRenamedFromDifferentLocale {
+		task ("Given a user navigates to a page's configuration") {
+			PagesAdmin.openToConfigurePublicPage(
+				groupName = "Test Site Name",
+				layoutName = "Test Source Page",
+				siteURLKey = "test-site-name");
+		}
+
+		task ("When a friendlyURL is saved in one localization and a blank friendlyURL is entered on a different localization") {
+			PortletEntry.changeLocale(
+				fieldName = "Friendly URL",
+				locale = "es-ES");
+
+			PortletEntry.inputName(name = "Test Source Page(ES)");
+
+			PagesAdmin.editFriendlyURL(friendlyURLEdit = "/new-url");
+
+			WaitForElementPresent(
+				key_locale = "en-US",
+				locator1 = "Translation#CURRENT_LOCALE");
+
+			PagesAdmin.editFriendlyURL(friendlyURLEdit = "");
+		}
+
+		task ("Then the friendlyURL will use the default URL and not one saved to a different localization") {
+			PagesAdmin.viewFriendlyURL(pageName = "test-source-page");
+
+			AssertTextNotEquals(
+				inputFieldId = "friendlyURL",
+				locator1 = "TextInput#INPUT_ID",
+				value1 = "/new-url");
+		}
+	}
+
 	@description = "This ensures that the default URL of the document will be displayed when accessing a document stored in the current site asset."
 	@priority = "5"
 	test DefaultURLIsDisplayedWhenAccessingDocumentInCurrentSite {
