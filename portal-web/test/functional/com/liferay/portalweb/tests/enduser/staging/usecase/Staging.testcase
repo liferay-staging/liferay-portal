@@ -267,6 +267,63 @@ definition {
 		}
 	}
 
+	@description = "This is a use case for LPS-150134. Verify scoped widget content will appear on a staged site."
+	@priority = "4"
+	test CanViewScopedWidgetContent {
+		task ("Given a blog entry and new site page containing a blogs widget scoped to the new page is created") {
+			JSONBlog.addEntry(
+				entryContent = "Blogs Content A",
+				entryTitle = "Blogs Content A",
+				groupName = "Guest");
+
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Test Page",
+				type = "content");
+
+			PagesAdmin.openPagesAdmin(siteURLKey = "guest");
+
+			PagesAdmin.gotoPageEllipsisMenuItem(
+				menuItem = "Edit",
+				pageName = "Test Page");
+
+			PageEditor.addWidget(portletName = "Blogs");
+
+			Portlet.selectScopePG(
+				portletName = "Blogs",
+				scope = "Test Page");
+
+			PortletEntry.publish();
+		}
+
+		task ("When the user switches scopes to create a separate blog entry and enables local live staging") {
+			Navigator.openURL();
+
+			ProductMenu.gotoScopedPortlet(
+				category = "Content & Data",
+				portlet = "Blogs",
+				scope = "Test Page");
+
+			Blogs.addEntry(
+				entryContent = "Blogs Content B",
+				entryTitle = "Blogs Content B");
+
+			JSONStaging.enableLocalStaging(groupName = "Guest");
+		}
+
+		task ("Then only the scoped entry will appear on the site page") {
+			Navigator.gotoSitePage(
+				pageName = "Test Page",
+				siteName = "Guest");
+
+			BlogsEntry.viewPG(
+				entryContent = "Blogs Content B",
+				entryTitle = "Blogs Content B");
+
+			BlogsEntry.viewNoPG(entryTitle = "Blogs Content A");
+		}
+	}
+
 	@description = "This is a use case for LPS-90127."
 	@priority = "3"
 	test ConfigureDDMStructureViaAPWhenNotStagedAssets {
