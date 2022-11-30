@@ -2169,6 +2169,8 @@ definition {
 
 	@priority = "4"
 	test ViewPublishDMWithModifiedTitle {
+		property portal.upstream = "marcell";
+
 		task ("Given: User add a new AP widget to the staging site") {
 			JSONLayout.addWidgetToPublicLayout(
 				column = "1",

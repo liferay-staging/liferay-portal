@@ -769,6 +769,7 @@ definition {
 	@priority = "5"
 	test CanEditImageInMG {
 		property custom.properties = "jsonws.web.service.paths.excludes=";
+		property portal.upstream = "marcell";
 
 		var portalURL = PropsUtil.get("portal.url");
 

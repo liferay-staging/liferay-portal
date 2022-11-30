@@ -147,6 +147,8 @@ definition {
 	@priority = "5"
 	@refactordone
 	test CanEditDocument {
+		property portal.upstream = "marcell";
+
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
 			dmDocumentTitle = "DM Document Title",
