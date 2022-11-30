@@ -1822,6 +1822,8 @@ definition {
 		var key_assetTitle = "${assetTitle}";
 		var key_portletName = "${portletName}";
 
+		WaitForElementPresent(locator1 = "AP#ASSET_ABSTRACT_EDIT");
+
 		Click(locator1 = "AP#ASSET_ABSTRACT_EDIT");
 
 		ScrollWebElementIntoView(locator1 = "Portlet#TITLE");
