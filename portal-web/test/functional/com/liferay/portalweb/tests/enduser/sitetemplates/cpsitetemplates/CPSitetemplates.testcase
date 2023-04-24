@@ -1287,7 +1287,9 @@ definition {
 				menuItem = "Configure",
 				pageName = "PageX");
 
-			PagesAdmin.editFriendlyURL(friendlyURLEdit = "/page1");
+			PagesAdmin.editFriendlyURL(
+				confirm = "true",
+				friendlyURLEdit = "/page1");
 
 			AssertConfirm.waitForConfirmation(value1 = "The friendly URL of the site template page you are trying to save conflicts with some of the own pages of the sites created from this site template. Are you sure you want to configure the site template page with this friendly URL?");
 		}
@@ -1441,15 +1443,13 @@ definition {
 		}
 
 		task ("When User adds page with Friendly URL conflicts in site template") {
-			SiteTemplates.addSitePageViaSiteTemplateCP(
+			SiteTemplates.addSitePageWithConfirmViaSiteTemplateCP(
 				pageName = "Page1",
 				siteTemplateName = "Site Template Name");
 		}
 
 		task ("Then There is javascript error window present with message") {
-			AssertTextEquals(
-				locator1 = "Message#ERROR_3",
-				value1 = "Site template page friendly URL is conflicting with the page friendly URL in some of the sites created from this template Page Page1 of Site Name");
+			AssertConfirm.waitForConfirmation(value1 = "The friendly URL of the site template page you are trying to save conflicts with some of the own pages of the sites created from this site template. Are you sure you want to configure the site template page with this friendly URL?");
 		}
 	}
 
