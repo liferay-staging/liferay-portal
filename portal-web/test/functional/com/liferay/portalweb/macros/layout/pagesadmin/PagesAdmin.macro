@@ -930,7 +930,14 @@ definition {
 			locator1 = "TextInput#INPUT_ID",
 			value1 = ${friendlyURLEdit});
 
-		PortletEntry.save();
+		if (isSet(confirm)) {
+			ClickNoError(
+				key_text = "Save",
+				locator1 = "Button#ANY");
+		}
+		else {
+			PortletEntry.save();
+		}
 	}
 
 	macro editName {

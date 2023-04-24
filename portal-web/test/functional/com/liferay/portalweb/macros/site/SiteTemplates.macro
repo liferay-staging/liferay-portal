@@ -112,6 +112,30 @@ definition {
 		}
 	}
 
+	macro addSitePageWithConfirmViaSiteTemplateCP {
+		SiteTemplatesNavigator.openSiteTemplatesAdmin();
+
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Manage",
+			rowEntry = ${siteTemplateName});
+
+		ProductMenu.gotoPortlet(
+			category = "Site Builder",
+			portlet = "Pages");
+
+		LexiconEntry.gotoAddMenuItem(menuItem = "Add Site Template Page");
+
+		LexiconCard.clickCard(card = "Widget Page");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+		PortletEntry.inputName(name = ${pageName});
+
+		ClickNoError(
+				key_text = "Add",
+				locator1 = "Button#ANY");
+	}
+
 	macro AddSiteTemplateJavaScript {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
