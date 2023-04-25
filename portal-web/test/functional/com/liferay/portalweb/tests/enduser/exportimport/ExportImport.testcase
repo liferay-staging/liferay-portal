@@ -259,6 +259,198 @@ definition {
 		}
 	}
 
+	@description = "This is a use case for LPS-166514. TC-13: Verify there is a help text and UI error message when saving the value with a negative value."
+	@priority = 5
+	test CannotSaveEntryExpiryDurationAndCleanupJobIntervalAsNegativeValues {
+		property test.name.skip.portal.instance = "ExportImport#CannotSaveEntryExpiryDurationAndCleanupJobIntervalAsNegativeValues";
+
+		task ("Given: Navigator to system settings to set the value of Export/Import Cleanup Job Interval") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Configuration",
+				panel = "Control Panel",
+				portlet = "System Settings");
+
+			SystemSettings.gotoConfiguration(
+				configurationCategory = "Infrastructure",
+				configurationName = "Export/Import",
+				configurationScope = "System Scope");
+
+			FormFields.viewFieldHelpText(
+				fieldHelpText = "Configure execution frequency for the Export/Import cleanup job. If set to 0 or a negative value, the scheduler job will be removed which means there will be no cleanup on Export/Import.",
+				fieldName = "Export/Import Cleanup Job Interval (in minutes)");
+		}
+
+		task ("When: Type a negative sign in the input box") {
+			Type(
+				key_fieldLabel = "Export/Import Cleanup Job Interval (in minutes)",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "-");
+
+			AssertTextEquals.assertPartialText(
+				key_alertMessage = "Please enter a value less than or equal to 2147483647.",
+				locator1 = "Message#ERROR_ENTER_A_VALID_VALUE",
+				value1 = "Please enter a value less than or equal to 2147483647.");
+
+			Click(
+				key_configurationName = "Export/Import, Staging",
+				key_configurationScope = "Virtual Instance Scope",
+				locator1 = "SystemSettings#SCOPED_CONFIGURATION_NAME");
+
+			FormFields.viewFieldHelpText(
+				fieldHelpText = "Successful Export/Import entries will become expired and will be removed automatically after this amount of days. Set to 0 or below if you do not want to clean up automatically and could remove manually. Default value is 0.",
+				fieldName = "Export/Import Entry expiry duration (in days)");
+
+			Type(
+				key_fieldLabel = "Export/Import Entry expiry duration (in days)",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "-");
+
+			AssertTextEquals.assertPartialText(
+				key_alertMessage = "Please enter a value less than or equal to 2147483647.",
+				locator1 = "Message#ERROR_ENTER_A_VALID_VALUE",
+				value1 = "Please enter a value less than or equal to 2147483647.");
+
+			PortalSettings.gotoConfiguration(
+				configurationCategory = "Infrastructure",
+				configurationName = "Export/Import, Staging",
+				configurationScope = "Virtual Instance Scope");
+
+			FormFields.viewFieldHelpText(
+				fieldHelpText = "Successful Export/Import entries will become expired and will be removed automatically after this amount of days. Set to 0 or below if you do not want to clean up automatically and could remove manually. Default value is 0.",
+				fieldName = "Export/Import Entry expiry duration (in days)");
+		}
+
+		task ("Then: Verify that an alert message appears") {
+			Type(
+				key_fieldLabel = "Export/Import Entry expiry duration (in days)",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "-");
+
+			AssertTextEquals.assertPartialText(
+				key_alertMessage = "Please enter a value less than or equal to 2147483647.",
+				locator1 = "Message#ERROR_ENTER_A_VALID_VALUE",
+				value1 = "Please enter a value less than or equal to 2147483647.");
+		}
+	}
+
+	@description = "This is a use case for LPS-166514. TC17-1: Verify that osgi configs work well with companyID."
+	@priority = 4
+	test ConfigureEntryExpiryDurationViaCompanyID {
+		property test.name.skip.portal.instance = "ExportImport#ConfigureEntryExpiryDurationViaCompanyID";
+
+		task ("Given: Set export/import cleanup job interval to 1 and create a new virtual instance") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Configuration",
+				panel = "Control Panel",
+				portlet = "System Settings");
+
+			SystemSettings.gotoConfiguration(
+				configurationCategory = "Infrastructure",
+				configurationName = "Export/Import",
+				configurationScope = "System Scope");
+
+			SystemSettings.editTextSetting(
+				settingName = "Export/Import Cleanup Job Interval (in minutes)",
+				settingValue = 1);
+
+			SystemSettings.saveConfiguration();
+
+			PortalInstances.openVirtualInstancesAdmin();
+
+			PortalInstances.addCP(
+				mailDomain = "www.able.com",
+				virtualHost = "www.able.com",
+				webId = "www.able.com");
+
+			PortalInstances.viewCP(virtualHost = "www.able.com");
+
+			User.firstLoginUI(
+				password = "test",
+				specificURL = "http://www.able.com:8080",
+				userEmailAddress = "test@www.able.com");
+		}
+
+		task ("When: Deploy config file with companyID") {
+			var virutalInstanceCompanyId = JSONCompany.getCompanyId(portalInstanceName = "www.able.com");
+
+			OSGiConfig.deployOSGiConfigFile(
+				osgiConfigFileName = "com.liferay.exportimport.configuration.ExportImportServiceConfiguration.scoped~CompanyId.config",
+				osgiConfigs = "companyId=L\"${virutalInstanceCompanyId}\",exportImportEntryExpiryDays=\"111\"");
+
+			OSGiConfig.waitForOSGiConfig();
+		}
+
+		task ("Then: Verify that osgi configs work well with companyID") {
+			PortalSettings.gotoConfiguration(
+				baseURL = "http://www.able.com:8080",
+				configurationCategory = "Infrastructure",
+				configurationName = "Export/Import, Staging",
+				configurationScope = "Virtual Instance Scope");
+
+			FormFields.viewTextValue(
+				fieldName = "Export/Import Entry expiry duration (in days)",
+				fieldValue = 111);
+		}
+	}
+
+	@description = "This is a use case for LPS-166514. TC17-2: Verify that osgi configs work well with companyWebID."
+	@priority = 4
+	test ConfigureEntryExpiryDurationViaCompanyWebID {
+		property test.name.skip.portal.instance = "ExportImport#ConfigureEntryExpiryDurationViaCompanyWebID";
+
+		task ("Given: Set export/import cleanup job interval to 1 and create a new virtual instance") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Configuration",
+				panel = "Control Panel",
+				portlet = "System Settings");
+
+			SystemSettings.gotoConfiguration(
+				configurationCategory = "Infrastructure",
+				configurationName = "Export/Import",
+				configurationScope = "System Scope");
+
+			SystemSettings.editTextSetting(
+				settingName = "Export/Import Cleanup Job Interval (in minutes)",
+				settingValue = 1);
+
+			SystemSettings.saveConfiguration();
+
+			PortalInstances.openVirtualInstancesAdmin();
+
+			PortalInstances.addCP(
+				mailDomain = "www.able.com",
+				virtualHost = "www.able.com",
+				webId = "www.able.com");
+
+			PortalInstances.viewCP(virtualHost = "www.able.com");
+
+			User.firstLoginUI(
+				password = "test",
+				specificURL = "http://www.able.com:8080",
+				userEmailAddress = "test@www.able.com");
+		}
+
+		task ("When: Deploy config file with companyWebID") {
+			OSGiConfig.deployOSGiConfigFile(
+				osgiConfigFileName = "com.liferay.exportimport.configuration.ExportImportServiceConfiguration.scoped~CompanyWebId.config",
+				osgiConfigs = "companyWebId=\"www.able.com\",exportImportEntryExpiryDays=L\"111\"");
+
+			OSGiConfig.waitForOSGiConfig();
+		}
+
+		task ("Then: Verify that osgi configs work well with companyWebID") {
+			PortalSettings.gotoConfiguration(
+				baseURL = "http://www.able.com:8080",
+				configurationCategory = "Infrastructure",
+				configurationName = "Export/Import, Staging",
+				configurationScope = "Virtual Instance Scope");
+
+			FormFields.viewTextValue(
+				fieldName = "Export/Import Entry expiry duration (in days)",
+				fieldValue = 111);
+		}
+	}
+
 	@description = "This is a use case for LRQA-73362. Verify if custom fields can be added and deleted through importing their LAR file."
 	@priority = 4
 	test CustomFieldDeletionViaImporting {

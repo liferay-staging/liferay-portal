@@ -1,0 +1,554 @@
+@component-name = "portal-staging"
+definition {
+
+	property ci.retries.disabled = "true";
+	property portal.release = "true";
+	property portal.upstream = "true";
+	property testray.main.component.name = "Export/Import Framework";
+
+	setUp {
+		TestCase.setUpPortalInstance();
+
+		User.firstLoginPG();
+	}
+
+	tearDown {
+		var testPortalInstance = PropsUtil.get("test.portal.instance");
+
+		if (${testPortalInstance} == "true") {
+			PortalInstances.tearDownCP();
+		}
+	}
+
+	@description = "This is a use case for LPS-166514. TC-1: Verify that the import entries and the stored import LAR files will be removed when the cleanup job is triggered."
+	@priority = 5
+	test CleanupJobCanRemoveImportEntryAndLARFile {
+		property test.name.skip.portal.instance = "ImportProcess#CleanupJobCanRemoveImportEntryAndLARFile";
+
+		task ("Given: Import two types of LAR files") {
+			JSONLayoututilitypage.deleteLayoutUtilityPage(
+				groupName = "Guest",
+				layoutUtilityPageName = 404);
+
+			LAR.importSiteCP(
+				larFileName = "HR_Home_Page_Content_master.lar",
+				siteName = "Guest",
+				uploadFrom = "dependencies");
+
+			BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
+
+			LAR.importPortlet(
+				larFileName = "Blogs.portlet.lar",
+				uploadFrom = "dependencies");
+		}
+
+		task ("And: Set export/import cleanup job interval and entry expiry duration to 1") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Configuration",
+				panel = "Control Panel",
+				portlet = "System Settings");
+
+			SystemSettings.gotoConfiguration(
+				configurationCategory = "Infrastructure",
+				configurationName = "Export/Import",
+				configurationScope = "System Scope");
+
+			SystemSettings.editTextSetting(
+				settingName = "Export/Import Cleanup Job Interval (in minutes)",
+				settingValue = 1);
+
+			SystemSettings.saveConfiguration();
+
+			PortalSettings.gotoConfiguration(
+				configurationCategory = "Infrastructure",
+				configurationName = "Export/Import, Staging",
+				configurationScope = "Virtual Instance Scope");
+
+			SystemSettings.editTextSetting(
+				settingName = "Export/Import Entry expiry duration (in days)",
+				settingValue = 1);
+
+			SystemSettings.saveConfiguration();
+		}
+
+		task ("When: Modify the modifiedDate of background task to a past date") {
+			ExportImport.updateLayoutBackgroundTaskModifiedDateToPast(type = "Import");
+
+			ExportImport.updatePortletBackgroundTaskModifiedDateToPast(type = "Import");
+
+			ApplicationsMenu.gotoPortlet(
+				category = "System",
+				panel = "Control Panel",
+				portlet = "Server Administration");
+
+			ServerAdministration.executeServerResourcesActions(actionsDescription = "Clear the database cache.");
+		}
+
+		task ("Then: Verify that the import entries and the stored import LAR files are removed") {
+
+			// Pausing 1 minute due to LPS-166514, the Export/Import cleanup job being executed every minute.
+
+			Pause(locator1 = 60000);
+
+			var backgroundTaskStatus = ExportImport.getBackgroundTaskStatus(type = "Import");
+
+			TestUtils.assertEquals(
+				actual = ${backgroundTaskStatus},
+				expected = "Deleted successfully");
+
+			var lARFileStatus = ExportImport.getLARFileStatus();
+
+			TestUtils.assertEquals(
+				actual = ${lARFileStatus},
+				expected = "Deleted successfully");
+
+			LAR.openImportAdmin(siteName = "guest");
+
+			LexiconEntry.viewNoEntry(rowEntry = "HR_Home_Page_Content_master.lar");
+
+			BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
+
+			LAR._gotoExportImport();
+
+			SelectFrame(locator1 = "IFrame#CONFIGURATION_DIALOG");
+
+			Navigator.gotoNavItem(navItem = "Import");
+
+			Click(locator1 = "ExportImport#CURRENT_AND_PREVIOUS_TAB");
+
+			AssertElementNotPresent(locator1 = "ExportImport#CURRENT_AND_PREVIOUS_STATUS_1");
+		}
+	}
+
+	@description = "This is a use case for LPS-166514. TC-16: Verify that the clean job works well after restarting portal."
+	@priority = 4
+	test CleanupJobStillWorkAfterRestart {
+		property osgi.module.configuration.file.names = "com.liferay.exportimport.configuration.ExportImportSystemConfiguration.config:com.liferay.exportimport.configuration.ExportImportServiceConfiguration.scoped~CompanyId.config";
+		property osgi.module.configurations = "cleanupJobInterval=I\"3\":companyId=L\"20096\"${line.separator}exportImportEntryExpiryDays=I\"1\"";
+		property test.name.skip.portal.instance = "ImportProcess#CleanupJobStillWorkAfterRestart";
+
+		task ("Given: Import two types of LAR files") {
+			JSONLayoututilitypage.deleteLayoutUtilityPage(
+				groupName = "Guest",
+				layoutUtilityPageName = 404);
+
+			LAR.importSiteCP(
+				larFileName = "HR_Home_Page_Content_master.lar",
+				siteName = "Guest",
+				uploadFrom = "dependencies");
+
+			BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
+
+			LAR.importPortlet(
+				larFileName = "Blogs.portlet.lar",
+				uploadFrom = "dependencies");
+		}
+
+		task ("When: Modify the modifiedDate of background task to a past date and restart portal") {
+			ExportImport.updateLayoutBackgroundTaskModifiedDateToPast(type = "Import");
+
+			ExportImport.updatePortletBackgroundTaskModifiedDateToPast(type = "Import");
+
+			ApplicationsMenu.gotoPortlet(
+				category = "System",
+				panel = "Control Panel",
+				portlet = "Server Administration");
+
+			ServerAdministration.executeServerResourcesActions(actionsDescription = "Clear the database cache.");
+
+			User.logoutPG();
+
+			Portlet.shutdownServer();
+
+			Portlet.startServer(
+				deleteLiferayHome = "false",
+				keepCachedAppServerData = "true",
+				keepOSGiState = "true");
+
+			User.firstLoginUI(
+				password = "test",
+				userEmailAddress = "test@liferay.com");
+		}
+
+		task ("Then: Verify that the import entries and the stored import LAR files are removed") {
+			LAR.openImportAdmin(siteName = "guest");
+
+			while (IsElementPresent(key_rowEntry = "HR_Home_Page_Content_master.lar", locator1 = "ContentRow#ENTRY_CONTENT_ENTRY_NAME")) {
+
+				// Pausing 30 seconds due to LPS-166514, the Export/Import cleanup job being executed every 3 minutes.
+
+				Pause(locator1 = 30000);
+
+				Refresh();
+			}
+
+			BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
+
+			LAR._gotoExportImport();
+
+			SelectFrame(locator1 = "IFrame#CONFIGURATION_DIALOG");
+
+			Navigator.gotoNavItem(navItem = "Import");
+
+			Click(locator1 = "ExportImport#CURRENT_AND_PREVIOUS_TAB");
+
+			AssertElementNotPresent(locator1 = "ExportImport#CURRENT_AND_PREVIOUS_STATUS_1");
+
+			var backgroundTaskStatus = ExportImport.getBackgroundTaskStatus(type = "Import");
+
+			TestUtils.assertEquals(
+				actual = ${backgroundTaskStatus},
+				expected = "Deleted successfully");
+
+			var lARFileStatus = ExportImport.getLARFileStatus();
+
+			TestUtils.assertEquals(
+				actual = ${lARFileStatus},
+				expected = "Deleted successfully");
+		}
+	}
+
+	@description = "This is a use case for LPS-166514. TC-7: Verify that the instance setting of Entry expiry will inherit the system setting and is able to overwrite the system setting."
+	@priority = 4
+	test InstanceSettingOfEntryExpiryDurationCanInheritAndOverwriteSystemSetting {
+		property osgi.module.configuration.file.names = "com.liferay.exportimport.configuration.ExportImportSystemConfiguration.config:com.liferay.exportimport.configuration.ExportImportServiceConfiguration.config";
+		property osgi.module.configurations = "cleanupJobInterval=I\"1\":exportImportEntryExpiryDays=I\"2\"";
+		property test.name.skip.portal.instance = "ImportProcess#InstanceSettingOfEntryExpiryDurationCanInheritAndOverwriteSystemSetting";
+
+		task ("Given: Create a new virtual instance and import two types of LAR files in it") {
+			PortalInstances.openVirtualInstancesAdmin();
+
+			PortalInstances.addCP(
+				mailDomain = "liferay.com",
+				virtualHost = "www.able.com",
+				webId = "www.able.com");
+
+			User.firstLoginPG(
+				password = "test",
+				userEmailAddress = "test@liferay.com",
+				virtualHostsURL = "http://www.able.com:8080");
+
+			Navigator.openSpecificURL(url = "http://www.able.com:8080");
+
+			ApplicationsMenu.gotoPortlet(
+				category = "Sites",
+				panel = "Control Panel",
+				portlet = "Sites");
+
+			Site.addBlankCP(siteName = "Site Name");
+
+			JSONLayoututilitypage.deleteLayoutUtilityPage(
+				groupName = "Site Name",
+				layoutUtilityPageName = "404 Error",
+				portalInstanceName = "www.able.com",
+				portalURL = "http://www.able.com:8080");
+
+			LAR.importSiteCP(
+				baseURL = "http://www.able.com:8080",
+				larFileName = "HR_Home_Page_Content_master.lar",
+				siteName = "Site Name",
+				uploadFrom = "dependencies");
+
+			BlogsNavigator.openBlogsAdmin(
+				baseURL = "http://www.able.com:8080",
+				siteURLKey = "site-name");
+
+			LAR.importPortlet(
+				larFileName = "Blogs.portlet.lar",
+				uploadFrom = "dependencies");
+		}
+
+		task ("When: Update the value of entry expiry duration from 2 to 1 and modify the modifiedDate of background task to a past date") {
+			PortalSettings.gotoConfiguration(
+				baseURL = "http://www.able.com:8080",
+				configurationCategory = "Infrastructure",
+				configurationName = "Export/Import, Staging",
+				configurationScope = "Virtual Instance Scope");
+
+			FormFields.viewTextValue(
+				fieldName = "Export/Import Entry expiry duration (in days)",
+				fieldValue = 2);
+
+			SystemSettings.editTextSetting(
+				settingName = "Export/Import Entry expiry duration (in days)",
+				settingValue = 1);
+
+			SystemSettings.saveConfiguration();
+
+			ExportImport.updateLayoutBackgroundTaskModifiedDateToPast(type = "Import");
+
+			ExportImport.updatePortletBackgroundTaskModifiedDateToPast(type = "Import");
+		}
+
+		task ("Then: Verify that the import entries and the stored import LAR files are removed") {
+
+			// Pausing 1 minute due to LPS-166514, the Export/Import cleanup job being executed every minute.
+
+			Pause(locator1 = 60000);
+
+			var backgroundTaskStatus = ExportImport.getBackgroundTaskStatus(type = "Import");
+
+			TestUtils.assertEquals(
+				actual = ${backgroundTaskStatus},
+				expected = "Deleted successfully");
+
+			var lARFileStatus = ExportImport.getLARFileStatus();
+
+			TestUtils.assertEquals(
+				actual = ${lARFileStatus},
+				expected = "Deleted successfully");
+
+			LAR.openImportAdmin(
+				baseURL = "http://www.able.com:8080",
+				siteName = "site-name");
+
+			LexiconEntry.viewNoEntry(rowEntry = "HR_Home_Page_Content_master.lar");
+
+			BlogsNavigator.openBlogsAdmin(
+				baseURL = "http://www.able.com:8080",
+				siteURLKey = "site-name");
+
+			LAR._gotoExportImport();
+
+			SelectFrame(locator1 = "IFrame#CONFIGURATION_DIALOG");
+
+			Navigator.gotoNavItem(navItem = "Import");
+
+			Click(locator1 = "ExportImport#CURRENT_AND_PREVIOUS_TAB");
+
+			AssertElementNotPresent(locator1 = "ExportImport#CURRENT_AND_PREVIOUS_STATUS_1");
+		}
+	}
+
+	@description = "This is a use case for LPS-166514. TC-10: Verify that the scheduler job will be removed if keep the default value of Export/Import Cleanup Job Interval to 0."
+	@priority = 4
+	test SetCleanupJobIntervalToZeroCanRemoveSchedulerJob {
+		property osgi.module.configuration.file.names = "com.liferay.exportimport.configuration.ExportImportSystemConfiguration.config";
+		property osgi.module.configurations = "cleanupJobInterval=I\"1\"";
+		property test.name.skip.portal.instance = "ImportProcess#SetCleanupJobIntervalToZeroCanRemoveSchedulerJob";
+
+		task ("Given: Verify scheduler job named DeleteExpiredBackgroundTasksSchedulerJobConfiguration exists and import two types of LAR files") {
+			JobScheduler.openJobSchedulerAdmin();
+
+			Navigator.gotoNavItem(navItem = "Scheduled Jobs");
+
+			Click.clickAtNotVisible(locator1 = "Blueprints#PAGINATION_NEXT_LINK");
+
+			AssertElementPresent(
+				key_name = "DeleteExpiredBackgroundTasksSchedulerJobConfiguration",
+				locator1 = "JobScheduler#RUN_NOW_BUTTON");
+
+			JSONLayoututilitypage.deleteLayoutUtilityPage(
+				groupName = "Guest",
+				layoutUtilityPageName = 404);
+
+			LAR.importSiteCP(
+				larFileName = "HR_Home_Page_Content_master.lar",
+				siteName = "Guest",
+				uploadFrom = "dependencies");
+
+			BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
+
+			LAR.importPortlet(
+				larFileName = "Blogs.portlet.lar",
+				uploadFrom = "dependencies");
+		}
+
+		task ("When: Restore the default value 0 of export/import cleanup job interval and assert scheduler job is removed") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Configuration",
+				panel = "Control Panel",
+				portlet = "System Settings");
+
+			SystemSettings.gotoConfiguration(
+				configurationCategory = "Infrastructure",
+				configurationName = "Export/Import",
+				configurationScope = "System Scope");
+
+			Click(locator1 = "Icon#HISTORY_VERTICAL_ELLIPSIS");
+
+			MenuItem.clickNoError(menuItem = "Reset Default Values");
+
+			Alert.viewSuccessMessage();
+
+			JobScheduler.openJobSchedulerAdmin();
+
+			Navigator.gotoNavItem(navItem = "Scheduled Jobs");
+
+			Click.clickAtNotVisible(locator1 = "Blueprints#PAGINATION_NEXT_LINK");
+
+			AssertElementNotPresent(
+				key_name = "DeleteExpiredBackgroundTasksSchedulerJobConfiguration",
+				locator1 = "JobScheduler#RUN_NOW_BUTTON");
+		}
+
+		task ("And: Set entry expiry duration to 1 and modify the modifiedDate of background task to a past date") {
+			PortalSettings.gotoConfiguration(
+				configurationCategory = "Infrastructure",
+				configurationName = "Export/Import, Staging",
+				configurationScope = "Virtual Instance Scope");
+
+			SystemSettings.editTextSetting(
+				settingName = "Export/Import Entry expiry duration (in days)",
+				settingValue = 1);
+
+			SystemSettings.saveConfiguration();
+
+			ExportImport.updateLayoutBackgroundTaskModifiedDateToPast(type = "Import");
+
+			ExportImport.updatePortletBackgroundTaskModifiedDateToPast(type = "Import");
+
+			ApplicationsMenu.gotoPortlet(
+				category = "System",
+				panel = "Control Panel",
+				portlet = "Server Administration");
+
+			ServerAdministration.executeServerResourcesActions(actionsDescription = "Clear the database cache.");
+		}
+
+		task ("Then: Verify that the stored import LAR files are not removed") {
+
+			// Pausing 1 minute due to LPS-166514, the Export/Import cleanup job being executed every minute.
+
+			Pause(locator1 = 60000);
+
+			var backgroundTaskStatus = ExportImport.getBackgroundTaskStatus(type = "Import");
+
+			TestUtils.assertEquals(
+				actual = ${backgroundTaskStatus},
+				expected = "Failed to delete");
+
+			var lARFileStatus = ExportImport.getLARFileStatus();
+
+			TestUtils.assertEquals(
+				actual = ${lARFileStatus},
+				expected = "Failed to delete");
+
+			LAR.openImportAdmin(siteName = "guest");
+
+			LexiconEntry.viewEntryName(rowEntry = "HR_Home_Page_Content_master.lar");
+
+			BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
+
+			LAR._gotoExportImport();
+
+			SelectFrame(locator1 = "IFrame#CONFIGURATION_DIALOG");
+
+			Navigator.gotoNavItem(navItem = "Import");
+
+			Click(locator1 = "ExportImport#CURRENT_AND_PREVIOUS_TAB");
+
+			AssertElementPresent(locator1 = "ExportImport#CURRENT_AND_PREVIOUS_STATUS_1");
+		}
+	}
+
+	@description = "This is a use case for LPS-166514. TC-6: Verify that the import process entries with the LAR files can be removed after triggering scheduler job manually."
+	@priority = 5
+	test TriggerSchedulerJobManuallyCanRemoveImportEntryAndLARFile {
+		property test.name.skip.portal.instance = "ImportProcess#TriggerSchedulerJobManuallyCanRemoveImportEntryAndLARFile";
+
+		task ("Given: Set export/import cleanup job interval to 30 and entry expiry duration to 1") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Configuration",
+				panel = "Control Panel",
+				portlet = "System Settings");
+
+			SystemSettings.gotoConfiguration(
+				configurationCategory = "Infrastructure",
+				configurationName = "Export/Import",
+				configurationScope = "System Scope");
+
+			SystemSettings.editTextSetting(
+				settingName = "Export/Import Cleanup Job Interval (in minutes)",
+				settingValue = 30);
+
+			SystemSettings.saveConfiguration();
+
+			PortalSettings.gotoConfiguration(
+				configurationCategory = "Infrastructure",
+				configurationName = "Export/Import, Staging",
+				configurationScope = "Virtual Instance Scope");
+
+			SystemSettings.editTextSetting(
+				settingName = "Export/Import Entry expiry duration (in days)",
+				settingValue = 1);
+
+			SystemSettings.saveConfiguration();
+		}
+
+		task ("And: Import two types of LAR files") {
+			JSONLayoututilitypage.deleteLayoutUtilityPage(
+				groupName = "Guest",
+				layoutUtilityPageName = 404);
+
+			LAR.importSiteCP(
+				larFileName = "HR_Home_Page_Content_master.lar",
+				siteName = "Guest",
+				uploadFrom = "dependencies");
+
+			BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
+
+			LAR.importPortlet(
+				larFileName = "Blogs.portlet.lar",
+				uploadFrom = "dependencies");
+		}
+
+		task ("When: Modify the modifiedDate of background task to a past date and trigger scheduler job manually") {
+			ExportImport.updateLayoutBackgroundTaskModifiedDateToPast(type = "Import");
+
+			ExportImport.updatePortletBackgroundTaskModifiedDateToPast(type = "Import");
+
+			ApplicationsMenu.gotoPortlet(
+				category = "System",
+				panel = "Control Panel",
+				portlet = "Server Administration");
+
+			ServerAdministration.executeServerResourcesActions(actionsDescription = "Clear the database cache.");
+
+			JobScheduler.openJobSchedulerAdmin();
+
+			Navigator.gotoNavItem(navItem = "Scheduled Jobs");
+
+			Click.clickAtNotVisible(locator1 = "Blueprints#PAGINATION_NEXT_LINK");
+
+			Click.clickAtNotVisible(
+				key_name = "DeleteExpiredBackgroundTasksSchedulerJobConfiguration",
+				locator1 = "JobScheduler#RUN_NOW_BUTTON");
+
+			Alert.viewSuccessMessage();
+		}
+
+		task ("Then: Verify that the import entries and the stored import LAR files are removed without waiting") {
+			var backgroundTaskStatus = ExportImport.getBackgroundTaskStatus(type = "Import");
+
+			TestUtils.assertEquals(
+				actual = ${backgroundTaskStatus},
+				expected = "Deleted successfully");
+
+			var lARFileStatus = ExportImport.getLARFileStatus();
+
+			TestUtils.assertEquals(
+				actual = ${lARFileStatus},
+				expected = "Deleted successfully");
+
+			LAR.openImportAdmin(siteName = "guest");
+
+			LexiconEntry.viewNoEntry(rowEntry = "HR_Home_Page_Content_master.lar");
+
+			BlogsNavigator.openBlogsAdmin(siteURLKey = "guest");
+
+			LAR._gotoExportImport();
+
+			SelectFrame(locator1 = "IFrame#CONFIGURATION_DIALOG");
+
+			Click(
+				key_navItem = "Import",
+				locator1 = "NavBar#NAV_ITEM_LINK");
+
+			Click(locator1 = "ExportImport#CURRENT_AND_PREVIOUS_TAB");
+
+			AssertElementNotPresent(locator1 = "ExportImport#CURRENT_AND_PREVIOUS_STATUS_1");
+		}
+	}
+
+}
