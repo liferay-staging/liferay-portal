@@ -609,18 +609,17 @@ definition {
 		property test.name.skip.portal.instance = "SitetemplatesUsecase#SiteTemplatePageLinkInWebContentRedirectCorrectly";
 
 		var portalURL = PropsUtil.get("portal.url");
-		var siteName = TestCase.getSiteName(siteName = ${siteName});
 
 		task ("Given: User add a new Site Template and 2 page to it") {
-			SiteTemplates.addCP(siteTemplateName = "Template Site");
+			SiteTemplates.addCP(siteTemplateName = ${siteTemplateName});
 
 			SiteTemplates.addSitePageViaSiteTemplateCP(
 				pageName = "Page1 Name",
-				siteTemplateName = "Template Site");
+				siteTemplateName = ${siteTemplateName});
 
 			SiteTemplates.addSitePageViaSiteTemplateCP(
 				pageName = "Page2 Name",
-				siteTemplateName = "Template Site");
+				siteTemplateName = ${siteTemplateName});
 		}
 
 		task ("And: Copies the URL of the second site template page as external URL") {
@@ -650,12 +649,10 @@ definition {
 		}
 
 		task ("When: User add a new Site based on the Site Template") {
-			Site.openSitesAdmin();
-
-			Site.addCP(
+			HeadlessSite.addSite(
 				siteName = "Site Name",
-				siteTemplateTab = "Custom Site Templates",
-				siteType = "Template");
+				templateName = ${siteTemplateName},
+				templateType = "Site Template");
 		}
 
 		task ("And: Add a WCD portlet to the first page then use the created Web Content in it") {
