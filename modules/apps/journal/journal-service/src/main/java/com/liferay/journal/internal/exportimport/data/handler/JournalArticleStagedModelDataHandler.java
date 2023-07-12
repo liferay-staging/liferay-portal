@@ -1421,9 +1421,12 @@ public class JournalArticleStagedModelDataHandler
 			JournalArticle importedArticle)
 		throws PortalException {
 
+		Element friendlyURLEntriesElement =
+			portletDataContext.getImportDataGroupElement(
+				FriendlyURLEntry.class);
+
 		List<Element> friendlyURLEntryElements =
-			portletDataContext.getReferenceDataElements(
-				article, FriendlyURLEntry.class);
+			friendlyURLEntriesElement.elements();
 
 		Map<Long, Long> articleNewPrimaryKeys =
 			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
@@ -1433,6 +1436,12 @@ public class JournalArticleStagedModelDataHandler
 			article.getResourcePrimKey(), importedArticle.getResourcePrimKey());
 
 		for (Element friendlyURLEntryElement : friendlyURLEntryElements) {
+			if (!_isReferrerFriendlyURLEntryElement(
+					friendlyURLEntryElement, article)) {
+
+				continue;
+			}
+
 			String path = friendlyURLEntryElement.attributeValue("path");
 
 			FriendlyURLEntry friendlyURLEntry =
@@ -1488,6 +1497,47 @@ public class JournalArticleStagedModelDataHandler
 			(guestUserId == firstArticle.getUserId())) {
 
 			return true;
+		}
+
+		return false;
+	}
+
+	private boolean _isReferrerFriendlyURLEntryElement(
+		Element friendlyURLEntryElement, JournalArticle article) {
+
+		String className = friendlyURLEntryElement.attributeValue(
+			"attached-class-name");
+
+		if (!Objects.equals(className, JournalArticle.class.getName())) {
+			return false;
+		}
+
+		Element referencesElement = friendlyURLEntryElement.element(
+			"references");
+
+		if (referencesElement == null) {
+			return false;
+		}
+
+		List<Element> referenceElements = referencesElement.elements();
+
+		for (Element referenceElement : referenceElements) {
+			String referenceElementClassName = referenceElement.attributeValue(
+				"class-name");
+
+			if (!Objects.equals(
+					referenceElementClassName,
+					JournalArticle.class.getName())) {
+
+				continue;
+			}
+
+			long referenceElementClassPK = GetterUtil.getLong(
+				referenceElement.attributeValue("class-pk"));
+
+			if (referenceElementClassPK == article.getId()) {
+				return true;
+			}
 		}
 
 		return false;

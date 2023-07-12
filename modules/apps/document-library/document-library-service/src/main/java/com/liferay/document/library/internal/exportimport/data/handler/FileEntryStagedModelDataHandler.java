@@ -1013,9 +1013,12 @@ public class FileEntryStagedModelDataHandler
 			FileEntry importedFileEntry, ServiceContext serviceContext)
 		throws PortalException {
 
+		Element friendlyURLEntriesElement =
+			portletDataContext.getImportDataGroupElement(
+				FriendlyURLEntry.class);
+
 		List<Element> friendlyURLEntryElements =
-			portletDataContext.getReferenceDataElements(
-				fileEntry, FriendlyURLEntry.class);
+			friendlyURLEntriesElement.elements();
 
 		Map<Long, Long> fileEntryNewPrimaryKeys =
 			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
@@ -1025,6 +1028,12 @@ public class FileEntryStagedModelDataHandler
 			fileEntry.getFileEntryId(), importedFileEntry.getFileEntryId());
 
 		for (Element friendlyURLEntryElement : friendlyURLEntryElements) {
+			if (!_isReferrerFriendlyURLEntryElement(
+					friendlyURLEntryElement, fileEntry)) {
+
+				continue;
+			}
+
 			String path = friendlyURLEntryElement.attributeValue("path");
 
 			FriendlyURLEntry friendlyURLEntry =
@@ -1123,6 +1132,46 @@ public class FileEntryStagedModelDataHandler
 		}
 
 		return updateFileEntry;
+	}
+
+	private boolean _isReferrerFriendlyURLEntryElement(
+		Element friendlyURLEntryElement, FileEntry fileEntry) {
+
+		String className = friendlyURLEntryElement.attributeValue(
+			"attached-class-name");
+
+		if (!Objects.equals(className, FileEntry.class.getName())) {
+			return false;
+		}
+
+		Element referencesElement = friendlyURLEntryElement.element(
+			"references");
+
+		if (referencesElement == null) {
+			return false;
+		}
+
+		List<Element> referenceElements = referencesElement.elements();
+
+		for (Element referenceElement : referenceElements) {
+			String referenceElementClassName = referenceElement.attributeValue(
+				"class-name");
+
+			if (!Objects.equals(
+					referenceElementClassName, DLFileEntry.class.getName())) {
+
+				continue;
+			}
+
+			long referenceElementClassPK = GetterUtil.getLong(
+				referenceElement.attributeValue("class-pk"));
+
+			if (referenceElementClassPK == fileEntry.getFileEntryId()) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private FileEntry _overrideFileVersion(

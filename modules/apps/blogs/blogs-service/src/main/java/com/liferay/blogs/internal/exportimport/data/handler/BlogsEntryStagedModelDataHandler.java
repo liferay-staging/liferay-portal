@@ -41,6 +41,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.trash.TrashHandler;
 import com.liferay.portal.kernel.trash.TrashHandlerRegistryUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -51,6 +52,7 @@ import com.liferay.portal.kernel.xml.Element;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -492,9 +494,12 @@ public class BlogsEntryStagedModelDataHandler
 			BlogsEntry importedEntry)
 		throws PortalException {
 
+		Element friendlyURLEntriesElement =
+			portletDataContext.getImportDataGroupElement(
+				FriendlyURLEntry.class);
+
 		List<Element> friendlyURLEntryElements =
-			portletDataContext.getReferenceDataElements(
-				entry, FriendlyURLEntry.class);
+			friendlyURLEntriesElement.elements();
 
 		Map<Long, Long> articleNewPrimaryKeys =
 			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
@@ -504,6 +509,12 @@ public class BlogsEntryStagedModelDataHandler
 			entry.getEntryId(), importedEntry.getEntryId());
 
 		for (Element friendlyURLEntryElement : friendlyURLEntryElements) {
+			if (!_isReferrerFriendlyURLEntryElement(
+					friendlyURLEntryElement, entry)) {
+
+				continue;
+			}
+
 			String path = friendlyURLEntryElement.attributeValue("path");
 
 			FriendlyURLEntry friendlyURLEntry =
@@ -531,6 +542,46 @@ public class BlogsEntryStagedModelDataHandler
 					existingFriendlyURLEntry);
 			}
 		}
+	}
+
+	private boolean _isReferrerFriendlyURLEntryElement(
+		Element friendlyURLEntryElement, BlogsEntry entry) {
+
+		String className = friendlyURLEntryElement.attributeValue(
+			"attached-class-name");
+
+		if (!Objects.equals(className, BlogsEntry.class.getName())) {
+			return false;
+		}
+
+		Element referencesElement = friendlyURLEntryElement.element(
+			"references");
+
+		if (referencesElement == null) {
+			return false;
+		}
+
+		List<Element> referenceElements = referencesElement.elements();
+
+		for (Element referenceElement : referenceElements) {
+			String referenceElementClassName = referenceElement.attributeValue(
+				"class-name");
+
+			if (!Objects.equals(
+					referenceElementClassName, BlogsEntry.class.getName())) {
+
+				continue;
+			}
+
+			long referenceElementClassPK = GetterUtil.getLong(
+				referenceElement.attributeValue("class-pk"));
+
+			if (referenceElementClassPK == entry.getEntryId()) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
