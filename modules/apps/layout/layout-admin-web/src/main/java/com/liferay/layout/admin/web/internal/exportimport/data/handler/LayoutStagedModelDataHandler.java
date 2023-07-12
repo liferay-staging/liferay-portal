@@ -2042,9 +2042,12 @@ public class LayoutStagedModelDataHandler
 			PortletDataContext portletDataContext)
 		throws Exception {
 
+		Element friendlyURLEntriesElement =
+			portletDataContext.getImportDataGroupElement(
+				FriendlyURLEntry.class);
+
 		List<Element> friendlyURLEntryElements =
-			portletDataContext.getReferenceDataElements(
-				layout, FriendlyURLEntry.class);
+			friendlyURLEntriesElement.elements();
 
 		Map<Long, Long> layoutNewPrimaryKeys =
 			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
@@ -2055,8 +2058,10 @@ public class LayoutStagedModelDataHandler
 			layout.getPrimaryKey(), importedLayout.getPrimaryKey());
 
 		for (Element friendlyURLEntryElement : friendlyURLEntryElements) {
-			StagedModelDataHandlerUtil.importStagedModel(
-				portletDataContext, friendlyURLEntryElement);
+			if (_isReferrerFriendlyURLEntryElement(friendlyURLEntryElement, layout)) {
+				StagedModelDataHandlerUtil.importStagedModel(
+					portletDataContext, friendlyURLEntryElement);
+			}
 		}
 	}
 
@@ -2559,6 +2564,46 @@ public class LayoutStagedModelDataHandler
 			(layoutModifiedDate.getTime() > lastMergeLayoutModifiedTime)) {
 
 			return true;
+		}
+
+		return false;
+	}
+
+	private boolean _isReferrerFriendlyURLEntryElement(
+		Element friendlyURLEntryElement, Layout layout) {
+
+		String className = friendlyURLEntryElement.attributeValue(
+			"attached-class-name");
+
+		if (!Objects.equals(className, Layout.class.getName())) {
+			return false;
+		}
+
+		Element referencesElement = friendlyURLEntryElement.element(
+			"references");
+
+		if (referencesElement == null) {
+			return false;
+		}
+
+		List<Element> referenceElements = referencesElement.elements();
+
+		for (Element referenceElement : referenceElements) {
+			String referenceElementClassName = referenceElement.attributeValue(
+				"class-name");
+
+			if (!Objects.equals(
+				referenceElementClassName, Layout.class.getName())) {
+
+				continue;
+			}
+
+			long referenceElementClassPK = GetterUtil.getLong(
+				referenceElement.attributeValue("class-pk"));
+
+			if (referenceElementClassPK == layout.getPlid()) {
+				return true;
+			}
 		}
 
 		return false;
