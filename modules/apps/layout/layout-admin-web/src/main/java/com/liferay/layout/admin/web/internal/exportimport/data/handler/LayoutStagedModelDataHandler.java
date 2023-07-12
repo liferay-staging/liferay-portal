@@ -1346,7 +1346,7 @@ public class LayoutStagedModelDataHandler
 					portletDataContext, friendlyURLEntry);
 
 				StagedModelDataHandlerUtil.exportReferenceStagedModel(
-					portletDataContext, layout, friendlyURLEntry,
+					portletDataContext, friendlyURLEntry, layout,
 					PortletDataContext.REFERENCE_TYPE_DEPENDENCY);
 			}
 		}

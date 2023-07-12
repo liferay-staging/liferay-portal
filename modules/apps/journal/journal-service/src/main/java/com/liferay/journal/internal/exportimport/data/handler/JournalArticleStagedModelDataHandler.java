@@ -1234,7 +1234,7 @@ public class JournalArticleStagedModelDataHandler
 				portletDataContext, friendlyURLEntry);
 
 			StagedModelDataHandlerUtil.exportReferenceStagedModel(
-				portletDataContext, article, friendlyURLEntry,
+				portletDataContext, friendlyURLEntry, article,
 				PortletDataContext.REFERENCE_TYPE_DEPENDENCY);
 		}
 	}
