@@ -6,6 +6,7 @@
 package com.liferay.portal.service.impl;
 
 import com.liferay.exportimport.kernel.staging.LayoutStagingUtil;
+import com.liferay.exportimport.kernel.staging.MergeLayoutPrototypesThreadLocal;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
@@ -45,6 +46,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.model.impl.LayoutSetImpl;
 import com.liferay.portal.service.base.LayoutSetLocalServiceBaseImpl;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.sites.kernel.util.SitesUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -281,27 +283,42 @@ public class LayoutSetLocalServiceImpl extends LayoutSetLocalServiceBaseImpl {
 
 			layoutSetPersistence.update(layoutSet);
 
-			return;
 		}
+		else {
 
-		if (Validator.isNull(layoutSetPrototypeUuid)) {
-			layoutSetPrototypeUuid =
-				layoutSetBranch.getLayoutSetPrototypeUuid();
-		}
+			if (Validator.isNull(layoutSetPrototypeUuid)) {
+				layoutSetPrototypeUuid =
+					layoutSetBranch.getLayoutSetPrototypeUuid();
+			}
 
-		if (Validator.isNull(layoutSetPrototypeUuid) &&
-			layoutSetPrototypeLinkEnabled) {
+			if (Validator.isNull(layoutSetPrototypeUuid) &&
+				layoutSetPrototypeLinkEnabled) {
 
-			throw new IllegalStateException(
-				"Cannot set layoutSetPrototypeLinkEnabled to true when " +
+				throw new IllegalStateException(
+					"Cannot set layoutSetPrototypeLinkEnabled to true when " +
 					"layoutSetPrototypeUuid is null");
+			}
+
+			layoutSetBranch.setLayoutSetPrototypeUuid(layoutSetPrototypeUuid);
+			layoutSetBranch.setLayoutSetPrototypeLinkEnabled(
+				layoutSetPrototypeLinkEnabled);
+
+			_layoutSetBranchPersistence.update(layoutSetBranch);
 		}
 
-		layoutSetBranch.setLayoutSetPrototypeUuid(layoutSetPrototypeUuid);
-		layoutSetBranch.setLayoutSetPrototypeLinkEnabled(
-			layoutSetPrototypeLinkEnabled);
+		try {
+			MergeLayoutPrototypesThreadLocal.setSkipMerge(false);
 
-		_layoutSetBranchPersistence.update(layoutSetBranch);
+			SitesUtil.mergeLayoutSetPrototypeLayouts(
+				_groupPersistence.findByPrimaryKey(groupId), layoutSet);
+		}
+		catch (Exception exception) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(
+					"Could not force propagation from site template to site",
+					exception);
+			}
+		}
 	}
 
 	@Override
