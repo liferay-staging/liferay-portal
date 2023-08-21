@@ -64,8 +64,7 @@ definition {
 		}
 	}
 
-	@description = "This is a use case for LPS-142518. TC-8 Verify that cookies will have 6 months of lifetime when they are accepted or declined. Blocked by LRCI-2917."
-	@ignore = "true"
+	@description = "This is a use case for LPS-142518. TC-8 Verify that cookies will have 6 months of lifetime when they are accepted or declined."
 	@priority = 5
 	test CookiesLifetimeIsSixMonthsWhenTheyAreSaved {
 		property portal.acceptance = "quarantine";
@@ -209,8 +208,7 @@ definition {
 		}
 	}
 
-	@description = "This is a use case for LPS-159221 TC-1. Verifying that Cookies are not saved until End-User sets them via Cookie Banner. Blocked by LPS-162952."
-	@ignore = "true"
+	@description = "This is a use case for LPS-159221 TC-1. Verifying that Cookies are not saved until End-User sets them via Cookie Banner."
 	@priority = 5
 	test VerifyingExplicitCookieWorfklow {
 		property portal.acceptance = "true";
@@ -230,8 +228,7 @@ definition {
 		}
 	}
 
-	@description = "This is a use case for LPS-159221 TC-2. Verifying that Cookies are saved beforehand with true as value, and we didn't show the Cookie Banner. Blocked by LPS-162952."
-	@ignore = "true"
+	@description = "This is a use case for LPS-159221 TC-2. Verifying that Cookies are saved beforehand with true as value, and we didn't show the Cookie Banner."
 	@priority = 5
 	test VerifyingImplicitCookieWorfklow {
 		property portal.acceptance = "true";
