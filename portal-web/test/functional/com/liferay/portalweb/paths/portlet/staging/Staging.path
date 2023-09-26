@@ -372,7 +372,7 @@
 </tr>
 <tr>
 	<td>STAGING_MENU_REDO_BUTTON</td>
-	<td>//a[contains(@id,'redoLink')]</td>
+	<td>//button[contains(@data-action,'redo')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -387,7 +387,7 @@
 </tr>
 <tr>
 	<td>STAGING_MENU_ENABLE_PAGE_BUTTON</td>
-	<td>//a[contains(@id,'submitLink')]</td>
+	<td>//button[contains(@id,'submitLink')]</td>
 	<td></td>
 </tr>
 </tbody>
