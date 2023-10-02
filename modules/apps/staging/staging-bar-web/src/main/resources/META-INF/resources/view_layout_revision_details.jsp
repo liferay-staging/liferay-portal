@@ -188,6 +188,7 @@ else {
 				displayType="unstyled"
 				dropdownItems="<%= stagingBarDisplayContext.getDropdownItems(layout, layoutRevision, hasWorkflowTask, layoutSetBranch) %>"
 				icon="ellipsis-v"
+				id='<%= liferayPortletResponse.getNamespace() + "stagingVersionOptions" %>'
 				monospaced="<%= true %>"
 				propsTransformer="js/StagingVersionPropsTransformer"
 				small="<%= true %>"
