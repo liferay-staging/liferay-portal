@@ -1099,6 +1099,25 @@ definition {
 			value1 = "Successful");
 	}
 
+	macro publishWithMultiPublishOption {
+			if (!(isSet(index))) {
+			var index = 1;
+		}
+
+		Click(locator1 = "ManagementBar#MORE_ACTIONS_ELLIPSIS");
+
+		MenuItem.click(menuItem = "Publish selected elements");
+
+		AssertTextEquals(
+			index = ${index},
+			locator1 = "Modal#BODY_MESSAGE",
+			value1 = "Are you sure you want to publish the selected entities?");
+
+		Click(
+			buttonName = "Publish to Live",
+			locator1 = "Modal#PRIMARY_BUTTON");
+	}
+
 	macro redoStagingPageVersioningPG {
 		while (IsElementNotPresent(locator1 = "Staging#STAGING_MENU_REDO_BUTTON")) {
 			Click(locator1 = "Icon#STAGING_BAR_VERTICAL_ELLIPSIS");
