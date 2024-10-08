@@ -1,3 +1,6 @@
+This repository is read only. Please, send staging PRs to headless repository:
+https://github.com/liferay-headless/liferay-portal
+
 ## The Liferay Development Team
 
 Liferay Portal is produced by the worldwide Liferay engineering team, and
