@@ -236,9 +236,9 @@ public class DefaultObjectEntryManagerImplTest
 		).put(
 			"localizedTextObjectFieldName_i18n",
 			HashMapBuilder.put(
-				"en_US", "en_US localizedTextObjectFieldValue"
+				"en_US", "en_US localizedTextObjectFieldValue1"
 			).put(
-				"pt_BR", "pt_BR localizedTextObjectFieldValue"
+				"pt_BR", "pt_BR localizedTextObjectFieldValue1"
 			).build()
 		).build();
 		_objectDefinition1 = _createObjectDefinition(
@@ -392,7 +392,7 @@ public class DefaultObjectEntryManagerImplTest
 				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"oneToManyRelationshipName", false,
-				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
 
 		_addAggregationObjectField(
 			"precisionDecimalObjectFieldName", "AVERAGE",
@@ -463,7 +463,7 @@ public class DefaultObjectEntryManagerImplTest
 				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"oneToManyRelationshipName1", false,
-				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
 
 		_objectDefinition3.setAccountEntryRestrictedObjectFieldId(
 			objectRelationship2.getObjectFieldId2());
@@ -515,7 +515,7 @@ public class DefaultObjectEntryManagerImplTest
 					LocalizedMapUtil.getLocalizedMap(
 						RandomTestUtil.randomString()),
 					"oneToManyRelationshipName2", false,
-					ObjectRelationshipConstants.TYPE_ONE_TO_MANY));
+					ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null));
 
 		objectDefinitionLocalService.publishCustomObjectDefinition(
 			adminUser.getUserId(), rootNode.getPrimaryKey());
@@ -803,7 +803,7 @@ public class DefaultObjectEntryManagerImplTest
 				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				StringUtil.randomId(), false,
-				ObjectRelationshipConstants.TYPE_MANY_TO_MANY);
+				ObjectRelationshipConstants.TYPE_MANY_TO_MANY, null);
 
 		_addAggregationObjectField(
 			null, "COUNT", _objectDefinition1.getObjectDefinitionId(),
@@ -1256,7 +1256,7 @@ public class DefaultObjectEntryManagerImplTest
 				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				"oneToManyRelationship", false,
-				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
 
 		_addRelatedObjectEntries(
 			objectDefinition1, objectDefinition2, "externalReferenceCode1",
@@ -1297,7 +1297,7 @@ public class DefaultObjectEntryManagerImplTest
 				objectRelationship.getExternalReferenceCode(),
 				objectRelationship.getObjectRelationshipId(), 0,
 				ObjectRelationshipConstants.DELETION_TYPE_DISASSOCIATE, false,
-				objectRelationship.getLabelMap());
+				objectRelationship.getLabelMap(), null);
 
 		_defaultObjectEntryManager.deleteObjectEntry(
 			companyId, _simpleDTOConverterContext, "externalReferenceCode1",
@@ -1338,7 +1338,7 @@ public class DefaultObjectEntryManagerImplTest
 				objectRelationship.getExternalReferenceCode(),
 				objectRelationship.getObjectRelationshipId(), 0,
 				ObjectRelationshipConstants.DELETION_TYPE_PREVENT, false,
-				objectRelationship.getLabelMap());
+				objectRelationship.getLabelMap(), null);
 
 		try {
 			_defaultObjectEntryManager.deleteObjectEntry(
@@ -1701,7 +1701,7 @@ public class DefaultObjectEntryManagerImplTest
 						"en_US localizedRichTextObjectFieldValue"
 					).put(
 						"localizedTextObjectFieldName",
-						"en_US localizedTextObjectFieldValue"
+						"en_US localizedTextObjectFieldValue1"
 					).put(
 						"picklistObjectFieldName", picklistObjectFieldValue1
 					).put(
@@ -1734,6 +1734,13 @@ public class DefaultObjectEntryManagerImplTest
 						properties = HashMapBuilder.<String, Object>put(
 							_objectRelationshipFieldName,
 							parentObjectEntry2.getId()
+						).put(
+							"localizedTextObjectFieldName_i18n",
+							HashMapBuilder.put(
+								"en_US", "en_US localizedTextObjectFieldValue2"
+							).put(
+								"pt_BR", "pt_BR localizedTextObjectFieldValue2"
+							).build()
 						).put(
 							"picklistObjectFieldName", picklistObjectFieldValue2
 						).put(
@@ -1808,8 +1815,8 @@ public class DefaultObjectEntryManagerImplTest
 			HashMapBuilder.put(
 				"filter",
 				buildEqualsExpressionFilterString(
-					"localizedLongTextObjectFieldName",
-					"en_US localizedLongTextObjectFieldValue")
+					"localizedTextObjectFieldName",
+					"en_US localizedTextObjectFieldValue1")
 			).build(),
 			childObjectEntry1);
 
@@ -1926,7 +1933,7 @@ public class DefaultObjectEntryManagerImplTest
 			HashMapBuilder.put(
 				"search", "en_US"
 			).build(),
-			childObjectEntry1);
+			childObjectEntry1, childObjectEntry2);
 		testGetObjectEntries(
 			HashMapBuilder.put(
 				"search", "pt_BR"
@@ -1980,12 +1987,12 @@ public class DefaultObjectEntryManagerImplTest
 			HashMapBuilder.put(
 				"sort", "localizedTextObjectFieldName:asc"
 			).build(),
-			childObjectEntry2, childObjectEntry1);
+			childObjectEntry1, childObjectEntry2);
 		testGetObjectEntries(
 			HashMapBuilder.put(
 				"sort", "localizedTextObjectFieldName:desc"
 			).build(),
-			childObjectEntry1, childObjectEntry2);
+			childObjectEntry2, childObjectEntry1);
 		testGetObjectEntries(
 			HashMapBuilder.put(
 				"sort", "textObjectFieldName:asc"
@@ -2243,7 +2250,7 @@ public class DefaultObjectEntryManagerImplTest
 				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				StringUtil.randomId(), false,
-				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
 
 		ObjectDefinition accountEntryObjectDefinition =
 			objectDefinitionLocalService.fetchObjectDefinition(
@@ -2257,7 +2264,7 @@ public class DefaultObjectEntryManagerImplTest
 				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				StringUtil.randomId(), false,
-				ObjectRelationshipConstants.TYPE_ONE_TO_MANY);
+				ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
 
 		childObjectDefinition.setAccountEntryRestrictedObjectFieldId(
 			objectRelationship2.getObjectFieldId2());
@@ -2409,7 +2416,7 @@ public class DefaultObjectEntryManagerImplTest
 				ObjectRelationshipConstants.DELETION_TYPE_CASCADE,
 				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 				StringUtil.randomId(), false,
-				ObjectRelationshipConstants.TYPE_MANY_TO_MANY);
+				ObjectRelationshipConstants.TYPE_MANY_TO_MANY, null);
 
 		ObjectEntry objectEntry3 = _defaultObjectEntryManager.addObjectEntry(
 			_simpleDTOConverterContext, _objectDefinition3,
@@ -2614,7 +2621,7 @@ public class DefaultObjectEntryManagerImplTest
 				"en_US localizedRichTextObjectFieldValue"
 			).put(
 				"localizedTextObjectFieldName",
-				"en_US localizedTextObjectFieldValue"
+				"en_US localizedTextObjectFieldValue1"
 			).putAll(
 				_localizedObjectFieldI18nValues
 			).build(),
@@ -2631,7 +2638,7 @@ public class DefaultObjectEntryManagerImplTest
 				"pt_BR localizedRichTextObjectFieldValue"
 			).put(
 				"localizedTextObjectFieldName",
-				"pt_BR localizedTextObjectFieldValue"
+				"pt_BR localizedTextObjectFieldValue1"
 			).putAll(
 				_localizedObjectFieldI18nValues
 			).build(),
@@ -2727,9 +2734,9 @@ public class DefaultObjectEntryManagerImplTest
 		).put(
 			"localizedTextObjectFieldName_i18n",
 			HashMapBuilder.put(
-				"en_US", "en_US localizedTextObjectFieldValue"
+				"en_US", "en_US localizedTextObjectFieldValue1"
 			).put(
-				"pt_BR", "pt_BR localizedTextObjectFieldValue"
+				"pt_BR", "pt_BR localizedTextObjectFieldValue1"
 			).build()
 		).build();
 
@@ -2785,7 +2792,7 @@ public class DefaultObjectEntryManagerImplTest
 				"en_US localizedRichTextObjectFieldValue"
 			).put(
 				"localizedTextObjectFieldName",
-				"en_US localizedTextObjectFieldValue"
+				"en_US localizedTextObjectFieldValue1"
 			).putAll(
 				_localizedObjectFieldI18nValues
 			).build(),
@@ -2799,7 +2806,7 @@ public class DefaultObjectEntryManagerImplTest
 				"localizedRichTextObjectFieldNameRawText", ""
 			).put(
 				"localizedTextObjectFieldName",
-				"pt_BR localizedTextObjectFieldValue"
+				"pt_BR localizedTextObjectFieldValue1"
 			).putAll(
 				_localizedObjectFieldI18nValues
 			).build(),

@@ -4,15 +4,15 @@
  */
 
 import ClayButton from '@clayui/button';
-import ClayForm, {ClayInput} from '@clayui/form';
 import {openSelectionModal, sub} from 'frontend-js-web';
 import React, {useState} from 'react';
 
-import {Item, LabelList} from './LabelList';
+import {StructureList} from './StructureList';
 
-interface DDMStructure {
+export interface DDMStructure {
 	ddmStructureId: string;
 	name: string;
+	scope: string;
 }
 
 interface Props {
@@ -54,7 +54,7 @@ export default function HighlightedDDMStructuresConfiguration({
 
 	return (
 		<div className="c-px-4">
-			<p className="c-pb-4">
+			<p className="text-secondary">
 				{Liferay.Language.get(
 					'select-the-structures-you-want-to-highlight-in-web-content-administration-to-quickly-access-and-manage-all-its-contents'
 				)}
@@ -68,68 +68,50 @@ export default function HighlightedDDMStructuresConfiguration({
 					.join(',')}
 			/>
 
-			<ClayForm.Group>
-				<h4 className="h5 text-weight-semi-bold">
-					{Liferay.Language.get('highlighted-structures')}
-				</h4>
+			<div className="align-items-end d-flex justify-content-between sheet-subtitle text-secondary">
+				{Liferay.Language.get('highlighted-structures')}
 
-				<ClayInput.Group>
-					<ClayInput.GroupItem>
-						<LabelList
-							items={ddmStructures.map(ddmStructureToItem)}
-							onItemsChange={(nextItems) =>
-								setDDMStructures(
-									nextItems.map(itemToDDMStructure)
-								)
-							}
-						/>
-					</ClayInput.GroupItem>
+				<ClayButton
+					aria-label={sub(
+						Liferay.Language.get('select-x'),
+						Liferay.Language.get('highlighted-structures')
+					)}
+					displayType="secondary"
+					onClick={onSelectButtonClick}
+					size="sm"
+					type="button"
+				>
+					{Liferay.Language.get('select')}
+				</ClayButton>
+			</div>
 
-					<ClayInput.GroupItem shrink>
-						<ClayButton
-							aria-label={Liferay.Language.get(
-								'add-highlighted-structures'
-							)}
-							displayType="secondary"
-							onClick={onSelectButtonClick}
-							type="button"
-						>
-							{Liferay.Language.get('select')}
-						</ClayButton>
-					</ClayInput.GroupItem>
-				</ClayInput.Group>
-			</ClayForm.Group>
+			<StructureList
+				onRemoveStructure={(nextStructures) =>
+					setDDMStructures(nextStructures)
+				}
+				structures={ddmStructures}
+			/>
 		</div>
 	);
 }
 
-function ddmStructureToItem(ddmStructure: DDMStructure): Item {
-	return {
-		label: ddmStructure.name,
-		value: ddmStructure.ddmStructureId,
-	};
-}
-
-function itemSelectorValueToDDMStructure(item: {value: string}): DDMStructure {
+export function itemSelectorValueToDDMStructure(item: {
+	value: string;
+}): DDMStructure {
 	const parsedValue = JSON.parse(item.value) as {
 		ddmstructureid: string;
 		name: string;
+		scope: string;
 	};
 
 	return {
 		ddmStructureId: parsedValue.ddmstructureid,
 		name: parsedValue.name,
+		scope: parsedValue.scope,
 	};
 }
 
-function itemToDDMStructure(item: Item): DDMStructure {
-	return {
-		ddmStructureId: item.value,
-		name: item.label,
-	};
-}
-
-function removeDuplicates<T>(
+export function removeDuplicates<T>(
 	list: T[],
 	getElementId: (element: T) => string
 ): T[] {

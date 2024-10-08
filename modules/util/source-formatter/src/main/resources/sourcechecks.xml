@@ -84,6 +84,11 @@
 
 		<!-- Liferay Source Checks -->
 
+		<check name="BNDBreakingChangeCommitMessageCheck">
+			<category name="Bug Prevention" />
+			<description name="Checks that commit message should contain the schematized breaking changes." />
+			<property name="enabled" value="false" />
+		</check>
 		<check name="BNDExportsCheck">
 			<category name="Bug Prevention" />
 			<description name="Checks that modules not ending with `-api`, `-client`, `-spi`, `-taglib`, `-test-util` do not export packages." />
@@ -245,7 +250,7 @@
 		</check>
 		<check name="IllegalTaglibsCheck">
 			<category name="Bug Prevention" />
-			<description name="Finds cases of incorrect use of certain taglibs." />
+			<description name="Finds cases of incorrect use of certain deprecated taglibs in modules." />
 		</check>
 	</source-processor>
 	<source-processor name="GradleSourceProcessor">
@@ -974,6 +979,10 @@
 
 		<!-- Liferay Source Checks -->
 
+		<check name="JSONBatchEngineDataFileCheck">
+			<category name="Styling" />
+			<description name="Remove elements in `*.batch-engine-data.json` files." />
+		</check>
 		<check name="JSONDeprecatedPackagesCheck">
 			<category name="Bug Prevention" />
 			<description name="Finds incorrect use of deprecated packages in `package.json` files." />
@@ -1631,9 +1640,9 @@
 			<category name="Upgrade" />
 			<description name="Replace the parameter Int for BigDecimal of method validate of 'CommerceOrderValidator' interface" />
 		</check>
-		<check name="UpgradeJavaCookieKeysCheck">
+		<check name="UpgradeJavaDDMFormValuesSerializerTrackerCheck">
 			<category name="Upgrade" />
-			<description name="CookieKeys class was replaced by CookiesManagerUtil and CookieConstants" />
+			<description name="Replaces the references of `DDMFormValuesSerializerTracker` class and also its methods usages." />
 		</check>
 		<check name="UpgradeJavaFacetedSearcherCheck">
 			<category name="Upgrade" />
@@ -1688,10 +1697,6 @@
 			<category name="Upgrade" />
 			<description name="Run code migration to replace '@ServiceReference' by '@Reference'" />
 		</check>
-		<check name="UpgradeJavaServiceTrackerListCheck">
-			<category name="Upgrade" />
-			<description name="Replace the number of generic type arguments in ServiceTrackerList" />
-		</check>
 		<check name="UpgradeJavaStorageTypeAwareCheck">
 			<category name="Upgrade" />
 			<description name="Run code to delete StorageTypeAware interface" />
@@ -1699,10 +1704,6 @@
 		<check name="UpgradeJSPFieldSetGroupCheck">
 			<category name="Upgrade" />
 			<description name="Run code to remove 'fieldset-group' tag" />
-		</check>
-		<check name="UpgradePortletDisplayCheck">
-			<category name="Upgrade" />
-			<description name="Replaces 'portletDisplay.getPortletInstanceConfiguration' with 'ConfigurationProviderUtil.getPortletInstanceConfiguration'" />
 		</check>
 		<check name="UpgradePortletFTLCheck">
 			<category name="Upgrade" />

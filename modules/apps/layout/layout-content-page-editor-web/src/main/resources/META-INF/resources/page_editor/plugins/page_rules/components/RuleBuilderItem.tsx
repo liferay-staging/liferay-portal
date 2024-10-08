@@ -4,22 +4,29 @@
  */
 
 import {ClayButtonWithIcon} from '@clayui/button';
+import {sub} from 'frontend-js-web';
 import React, {KeyboardEventHandler, ReactNode, Ref} from 'react';
 
 interface RuleBuilderItemProps {
-	children: ReactNode;
-	onDeleteButtonClick: () => void;
-	showDeleteButton: boolean;
-	type: 'action' | 'condition';
-	wrapperRef?: Ref<HTMLDivElement>;
+	'aria-label': string;
+	'children': ReactNode;
+	'description': string;
+	'onDeleteButtonClick': () => void;
+	'onItemSelected': () => void;
+	'showDeleteButton': boolean;
+	'type': 'action' | 'condition';
+	'wrapperRef'?: Ref<HTMLDivElement>;
 }
 
 export default function RuleBuilderItem({
 	children,
+	description,
 	onDeleteButtonClick,
+	onItemSelected,
 	showDeleteButton,
 	type,
 	wrapperRef,
+	...otherProps
 }: RuleBuilderItemProps) {
 	const onKeyDown: KeyboardEventHandler = (event) => {
 		if (event.target !== event.currentTarget) {
@@ -31,6 +38,12 @@ export default function RuleBuilderItem({
 				`.page-editor__rule-builder-item--${type}`
 			)
 		);
+
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+
+			onItemSelected();
+		}
 
 		if (event.key === 'ArrowDown') {
 			event.preventDefault();
@@ -68,6 +81,7 @@ export default function RuleBuilderItem({
 			ref={wrapperRef}
 			role="menuitem"
 			tabIndex={0}
+			{...otherProps}
 		>
 			<div className="c-gap-2 d-flex flex-grow-1">{children}</div>
 
@@ -75,11 +89,17 @@ export default function RuleBuilderItem({
 				<ClayButtonWithIcon
 					aria-label={
 						type === 'action'
-							? Liferay.Language.get('delete-action')
-							: Liferay.Language.get('delete-condition')
+							? sub(
+									Liferay.Language.get('delete-action-x'),
+									description
+							  )
+							: sub(
+									Liferay.Language.get('delete-condition-x'),
+									description
+							  )
 					}
 					borderless
-					className="page-editor__rule-builder-delete-button"
+					className="lfr-portal-tooltip page-editor__rule-builder-delete-button"
 					displayType="secondary"
 					onClick={() => onDeleteButtonClick()}
 					size="sm"

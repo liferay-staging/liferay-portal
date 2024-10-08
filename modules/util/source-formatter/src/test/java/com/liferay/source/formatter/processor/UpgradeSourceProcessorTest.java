@@ -99,8 +99,10 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testUpgradeJavaCookieKeysCheck() throws Exception {
-		test("upgrade/UpgradeJavaCookieKeysCheck.testjava");
+	public void testUpgradeJavaDDMFormValuesSerializerTrackerCheck()
+		throws Exception {
+
+		test("upgrade/UpgradeJavaDDMFormValuesSerializerTrackerCheck.testjava");
 	}
 
 	@Test
@@ -190,11 +192,6 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testUpgradeJavaServiceTrackerListCheck() throws Exception {
-		test("upgrade/UpgradeJavaServiceTrackerListCheck.testjava");
-	}
-
-	@Test
 	public void testUpgradeJavaStorageTypeAwareCheck() throws Exception {
 		test("upgrade/UpgradeJavaStorageTypeAwareCheck.testjava");
 	}
@@ -202,12 +199,6 @@ public class UpgradeSourceProcessorTest extends BaseSourceProcessorTestCase {
 	@Test
 	public void testUpgradeJSPFieldSetGroupCheck() throws Exception {
 		test("upgrade/UpgradeJSPFieldSetGroupCheck.testjsp");
-	}
-
-	@Test
-	public void testUpgradePortletDisplayCheck() throws Exception {
-		test("upgrade/UpgradeJavaPortletDisplayCheck.testjava");
-		test("upgrade/UpgradeJSPPortletDisplayCheck.testjsp");
 	}
 
 	@Test

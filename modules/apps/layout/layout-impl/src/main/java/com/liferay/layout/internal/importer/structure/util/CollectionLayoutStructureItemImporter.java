@@ -63,7 +63,10 @@ public class CollectionLayoutStructureItemImporter
 			collectionStyledLayoutStructureItem =
 				(CollectionStyledLayoutStructureItem)
 					layoutStructure.addCollectionStyledLayoutStructureItem(
-						_getCollectionItemId(pageElement), pageElement.getId(),
+						_getCollectionItemId(
+							layoutStructureItemImporterContext, pageElement),
+						layoutStructureItemImporterContext.getItemId(
+							pageElement),
 						layoutStructureItemImporterContext.getParentItemId(),
 						layoutStructureItemImporterContext.getPosition());
 
@@ -242,16 +245,17 @@ public class CollectionLayoutStructureItemImporter
 		return null;
 	}
 
-	private String _getCollectionItemId(PageElement pageElement) {
+	private String _getCollectionItemId(
+		LayoutStructureItemImporterContext layoutStructureItemImporterContext,
+		PageElement pageElement) {
+
 		PageElement[] pageElements = pageElement.getPageElements();
 
 		if (ArrayUtil.isEmpty(pageElements)) {
 			return PortalUUIDUtil.generate();
 		}
 
-		PageElement childPageElement = pageElements[0];
-
-		return childPageElement.getId();
+		return layoutStructureItemImporterContext.getItemId(pageElements[0]);
 	}
 
 	private JSONObject _getCollectionJSONObject(

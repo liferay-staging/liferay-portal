@@ -31,7 +31,6 @@ import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -100,8 +99,7 @@ public class LayoutPageTemplateEntryModelListener
 		LayoutPageTemplateEntry layoutPageTemplateEntry,
 		LayoutPageTemplateEntry originalLayoutPageTemplateEntry) {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPS-195263") ||
-			!Objects.equals(
+		if (!Objects.equals(
 				layoutPageTemplateEntry.getType(),
 				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE) ||
 			(originalLayoutPageTemplateEntry.getClassNameId() == 0)) {
@@ -181,7 +179,12 @@ public class LayoutPageTemplateEntryModelListener
 					layout.getGroupId(),
 					String.valueOf(layoutPageTemplateEntry.getClassTypeId()));
 
-			if (infoItemFormVariation == null) {
+			if ((infoItemFormVariation == null) ||
+				((infoPermissionProvider != null) &&
+				 !infoPermissionProvider.hasViewPermission(
+					 infoItemFormVariation.getKey(), layout.getGroupId(),
+					 PermissionThreadLocal.getPermissionChecker()))) {
+
 				return Collections.emptyList();
 			}
 		}

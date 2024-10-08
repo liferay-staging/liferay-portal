@@ -13,6 +13,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -124,6 +125,35 @@ public class EndpointHelper {
 			responseEntityMaps, pagination, objectEntriesPage.getTotalCount());
 	}
 
+	public Map<String, Object> postObjectEntry(
+			long companyId, Map<String, Object> properties,
+			APIApplication.Schema requestSchema,
+			APIApplication.Schema responseSchema, String scopeKey)
+		throws Exception {
+
+		ObjectEntry objectEntry = new ObjectEntry();
+
+		Map<String, Object> objectEntryProperties = new HashMap<>();
+
+		for (APIApplication.Property property : requestSchema.getProperties()) {
+			Object object = properties.get(property.getName());
+
+			if (Validator.isNotNull(object)) {
+				objectEntryProperties.put(
+					property.getSourceFieldName(), object);
+			}
+		}
+
+		objectEntry.setProperties(objectEntryProperties);
+
+		return _getResponseEntityMap(
+			_objectEntryHelper.addObjectEntry(
+				companyId,
+				requestSchema.getMainObjectDefinitionExternalReferenceCode(),
+				objectEntry, scopeKey),
+			responseSchema);
+	}
+
 	private Map<String, Object> _getObjectEntryProperties(
 		ObjectEntry objectEntry) {
 
@@ -189,8 +219,11 @@ public class EndpointHelper {
 	}
 
 	private Map<String, Object> _getResponseEntityMap(
-			ObjectEntry objectEntry, APIApplication.Schema schema)
-		throws Exception {
+		ObjectEntry objectEntry, APIApplication.Schema schema) {
+
+		if (schema == null) {
+			return null;
+		}
 
 		Map<String, Object> responseEntityMap = new HashMap<>();
 

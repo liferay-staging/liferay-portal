@@ -698,11 +698,7 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		props.put("searchInputAutoFocus", isSearchInputAutoFocus());
 		props.put(
 			"searchInputName", _namespace(namespace, getSearchInputName()));
-
-		if (FeatureFlagManagerUtil.isEnabled("LPS-198573")) {
-			props.put("searchResultsTitle", getSearchResultsTitle());
-		}
-
+		props.put("searchResultsTitle", getSearchResultsTitle());
 		props.put("searchValue", getSearchValue());
 		props.put("selectAllURL", getSelectAllURL());
 		props.put("selectable", isSelectable());
@@ -1298,17 +1294,17 @@ public class ManagementToolbarTag extends BaseContainerTag {
 			jspWriter.write("\"><div class=\"tbar-section\"><span class=\"");
 			jspWriter.write("component-text text-truncate-inline\"><span");
 			jspWriter.write(" class=\"text-truncate\">");
+
+			String searchValueHTML =
+				"<strong>\"" + HtmlUtil.escape(searchValue) + "\"</strong>";
+
 			jspWriter.write(
 				LanguageUtil.format(
 					resourceBundle,
-					(getItemsTotal() == 1) ? "x-result-for" : "x-results-for",
-					new Object[] {getItemsTotal()}));
-
-			if (searchValue != null) {
-				jspWriter.write("<strong> \"");
-				jspWriter.write(HtmlUtil.escape(searchValue));
-				jspWriter.write("\"</strong>");
-			}
+					_getResultsLanguageKey(
+						ListUtil.isNotEmpty(filterLabelItems), getItemsTotal(),
+						searchValue),
+					new Object[] {getItemsTotal(), searchValueHTML}));
 
 			jspWriter.write("</span></span></div></li>");
 
@@ -1336,9 +1332,7 @@ public class ManagementToolbarTag extends BaseContainerTag {
 
 		String searchResultsTitle = getSearchResultsTitle();
 
-		if (FeatureFlagManagerUtil.isEnabled("LPS-198573") &&
-			isShowResultsBar() && Validator.isNotNull(searchResultsTitle)) {
-
+		if (isShowResultsBar() && Validator.isNotNull(searchResultsTitle)) {
 			jspWriter.write("<div class=\"c-mt-4 container-fluid ");
 			jspWriter.write("container-fluid-max-xl\"><h3>");
 			jspWriter.write(searchResultsTitle);
@@ -1400,6 +1394,40 @@ public class ManagementToolbarTag extends BaseContainerTag {
 		}
 
 		return searchData;
+	}
+
+	private String _getResultsLanguageKey(
+		boolean hasFilters, int itemsTotal, String searchValue) {
+
+		if (Validator.isNull(searchValue)) {
+			if (hasFilters) {
+				if (itemsTotal == 1) {
+					return "x-result-found-with-filters";
+				}
+
+				return "x-results-found-with-filters";
+			}
+
+			if (itemsTotal == 1) {
+				return "x-result-found";
+			}
+
+			return "x-results-found";
+		}
+
+		if (hasFilters) {
+			if (itemsTotal == 1) {
+				return "x-result-found-for-x-with-filters";
+			}
+
+			return "x-results-found-for-x-with-filters";
+		}
+
+		if (itemsTotal == 1) {
+			return "x-result-found-for-x";
+		}
+
+		return "x-results-found-for-x";
 	}
 
 	private String _namespace(String namespace, String prop) {

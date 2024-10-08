@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {ScreenReaderAnnouncerContext} from '@liferay/layout-js-components-web';
 import {sub} from 'frontend-js-web';
-import React, {ComponentProps, useContext} from 'react';
+import React, {ComponentProps, useContext, useRef} from 'react';
 
+import useActionValues from '../../../app/utils/useActionValues';
 import RuleBuilderItem from './RuleBuilderItem';
 import RuleSelect from './RuleSelect';
-import {ScreenReaderAnnouncerContext} from './ScreenReaderContext';
 
 export interface Action {
 	action?: 'fragment';
@@ -26,7 +27,7 @@ interface ActionProps {
 	wrapperRef?: ComponentProps<typeof RuleBuilderItem>['wrapperRef'];
 }
 
-const TYPE_ITEMS = [
+export const ACTION_TYPE_ITEMS = [
 	{
 		label: Liferay.Language.get('show'),
 		value: 'show',
@@ -38,7 +39,7 @@ const TYPE_ITEMS = [
 	},
 ] as const;
 
-const ACTION_ITEMS = [
+export const ACTION_ITEMS = [
 	{
 		label: Liferay.Language.get('fragment'),
 		value: 'fragment',
@@ -55,9 +56,27 @@ export default function Action({
 }: ActionProps) {
 	const {sendMessage} = useContext(ScreenReaderAnnouncerContext);
 
+	const [{description}] = useActionValues({
+		actions: [action],
+		items: layoutDataItems,
+	});
+
+	const selectRef = useRef<HTMLButtonElement | undefined>();
+
+	const completeAction = !!action.itemId;
+
 	return (
 		<RuleBuilderItem
+			aria-label={
+				completeAction
+					? description
+					: Liferay.Language.get('incomplete-action')
+			}
+			description={description}
 			onDeleteButtonClick={onDeleteAction}
+			onItemSelected={() => {
+				selectRef.current?.focus();
+			}}
 			showDeleteButton={showDeleteButton}
 			type="action"
 			wrapperRef={wrapperRef}
@@ -67,9 +86,10 @@ export default function Action({
 					Liferay.Language.get('select-x'),
 					Liferay.Language.get('action')
 				)}
-				items={TYPE_ITEMS}
+				items={ACTION_TYPE_ITEMS}
 				onSelectionChange={(type) => onActionChange({...action, type})}
 				selectedKey={action.type}
+				triggerRef={selectRef}
 			/>
 
 			{action.type ? (

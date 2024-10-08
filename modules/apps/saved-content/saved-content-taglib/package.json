@@ -1,6 +1,6 @@
 {
 	"dependencies": {
-		"@clayui/button": "3.106.1",
+		"@clayui/button": "3.107.0",
 		"@clayui/icon": "3.106.1",
 		"@liferay/frontend-js-react-web": "*",
 		"classnames": "2.3.1",
@@ -17,5 +17,5 @@
 		"format": "liferay-npm-scripts fix",
 		"test": "liferay-npm-scripts test"
 	},
-	"version": "1.0.0"
+	"version": "1.0.2"
 }

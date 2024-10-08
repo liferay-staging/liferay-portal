@@ -5,19 +5,11 @@
 
 /* eslint-disable no-undef */
 
-adtSpatialNavigationProvider = new navigation.default.SpatialNavigationProvider(
-	'.adt-submenu-item-link'
-);
-
-spatialNavigationProvider = new navigation.default.SpatialNavigationProvider(
-	'.adt-nav-text'
-);
-
-const primaryNav = fragmentElement.querySelector('.primary-nav');
-
-spatialNavigationProvider.addFocusableClasses(primaryNav);
-
 window.addEventListener('load', () => {
+	const searchInput = fragmentElement.querySelector('.search-input');
+
+	searchInput.value = '';
+
 	new navigation.default.DropdownProvider(
 		'.account-info',
 		'.account-info',
@@ -100,6 +92,8 @@ const seeAllResultsLink = fragmentElement.querySelector(
 	'.search-suggestions-see-all-results-text'
 );
 
+const searchSubmitLink = fragmentElement.querySelector('.search-submit');
+
 const searchSuggestionItem = searchSuggestionItemTemplate.content.querySelector(
 	'a'
 );
@@ -111,6 +105,7 @@ function updateSearch() {
 
 	if (searchSuggestionsInputValue) {
 		seeAllResultsLink.href = '/search?q=' + searchSuggestionsInputValue;
+		searchSubmitLink.href = '/search?q=' + searchSuggestionsInputValue;
 		suggestions.classList.add('performing-search');
 		performSearch(searchSuggestionsInputValue);
 	}
@@ -285,3 +280,5 @@ function getBreadcrumbFromURL(url) {
 		})
 		.join(' ');
 }
+
+fragmentElement.querySelector('.public-sites-navigation').style.zIndex = '4';

@@ -7,7 +7,17 @@ package com.liferay.jethr0.event.github;
 
 import com.liferay.jethr0.event.BaseEventHandler;
 import com.liferay.jethr0.event.EventHandlerContext;
-import com.liferay.jethr0.event.github.issue.GitHubIssue;
+import com.liferay.jethr0.event.github.repository.GitHubRepository;
+import com.liferay.jethr0.git.branch.GitBranchEntity;
+import com.liferay.jethr0.git.branch.repository.GitBranchEntityRepository;
+import com.liferay.jethr0.util.PropertiesUtil;
+import com.liferay.jethr0.util.StringUtil;
+
+import java.io.IOException;
+
+import java.net.URL;
+
+import java.util.Properties;
 
 import org.json.JSONObject;
 
@@ -22,17 +32,59 @@ public abstract class BaseGitHubEventHandler extends BaseEventHandler {
 		super(eventHandlerContext, messageJSONObject);
 	}
 
-	protected GitHubIssue getGitHubIssue() throws InvalidJSONException {
+	protected GitHubRepository getGitHubRepository()
+		throws InvalidJSONException {
+
 		JSONObject messageJSONObject = getMessageJSONObject();
 
-		JSONObject issueJSONObject = messageJSONObject.optJSONObject("issue");
+		JSONObject repositoryJSONObject = messageJSONObject.optJSONObject(
+			"repository");
 
-		if (issueJSONObject == null) {
+		if (repositoryJSONObject == null) {
 			throw new InvalidJSONException(
-				"Missing \"issue\" from message JSON");
+				"Missing \"repository\" from message JSON");
 		}
 
-		return new GitHubIssue(issueJSONObject);
+		return new GitHubRepository(repositoryJSONObject);
 	}
+
+	protected String getJenkinsBranchBuildPropertyValue(String propertyName)
+		throws IOException {
+
+		GitBranchEntity gitBranchEntity = getJenkinsGitBranchEntity();
+
+		if (gitBranchEntity == null) {
+			return null;
+		}
+
+		Properties properties = PropertiesUtil.combine(
+			gitBranchEntity.getProperties("build.properties"),
+			gitBranchEntity.getProperties("commands/build.properties"));
+
+		if (properties == null) {
+			return null;
+		}
+
+		return PropertiesUtil.getPropertyValue(properties, propertyName);
+	}
+
+	protected GitBranchEntity getJenkinsGitBranchEntity() {
+		if (_jenkinsGitBranchEntity != null) {
+			return _jenkinsGitBranchEntity;
+		}
+
+		GitBranchEntityRepository gitBranchEntityRepository =
+			getGitBranchEntityRepository();
+
+		_jenkinsGitBranchEntity = gitBranchEntityRepository.getByURL(
+			_JENKINS_GITHUB_URL);
+
+		return _jenkinsGitBranchEntity;
+	}
+
+	private static final URL _JENKINS_GITHUB_URL = StringUtil.toURL(
+		"https://github.com/liferay/liferay-jenkins-ee");
+
+	private GitBranchEntity _jenkinsGitBranchEntity;
 
 }

@@ -133,14 +133,44 @@
 										"definition": {
 											"widgetInstance": {
 												"widgetConfig": {
-													"displayStyle": "default",
+													"displayStyle": "ddmTemplate_CATEGORY-FACET-VOCABULARY-FTL",
 													"frequenciesVisible": "true",
-													"frequencyThreshold": "1",
-													"maxTerms": "10",
-													"order": "count:desc",
-													"parameterName": "folder"
+													"frequencyThreshold": "0",
+													"maxTerms": "12",
+													"order": "key:asc",
+													"parameterName": "category"
 												},
-												"widgetName": "com_liferay_portal_search_web_folder_facet_portlet_FolderFacetPortlet"
+												"widgetName": "com_liferay_portal_search_web_category_facet_portlet_CategoryFacetPortlet"
+											}
+										},
+										"type": "Widget"
+									},
+									{
+										"definition": {
+											"fragmentStyle": {
+												"hidden": true
+											},
+											"widgetInstance": {
+												"widgetConfig": {
+													"federatedSearchKey": "",
+													"sxpBlueprintExternalReferenceCode": "blueprint"
+												},
+												"widgetName": "com_liferay_search_experiences_web_internal_blueprint_options_portlet_SXPBlueprintOptionsPortlet"
+											}
+										},
+										"type": "Widget"
+									},
+									{
+										"definition": {
+											"fragmentStyle": {
+												"hidden": true
+											},
+											"widgetInstance": {
+												"widgetConfig": {
+													"allowEmptySearches": "true",
+													"basicFacetSelection": "false"
+												},
+												"widgetName": "com_liferay_portal_search_web_search_options_portlet_SearchOptionsPortlet"
 											}
 										},
 										"type": "Widget"
@@ -188,6 +218,10 @@
 							},
 							{
 								"definition": {
+									"fragmentStyle": {
+										"paddingLeft": "4",
+										"paddingRight": "4"
+									},
 									"widgetInstance": {
 										"widgetConfig": {
 											"displayInDocumentForm": "false",

@@ -18,7 +18,9 @@ interface Item {
 interface MainProps {
 	defaultSearch?: boolean;
 	editingLanguageId?: Locale;
+	errorMessage?: string;
 	fixedOptions?: Option<string>[];
+	id?: string;
 	label: string;
 	localizedValue?: any;
 	localizedValueEdited?: any;
@@ -27,13 +29,16 @@ interface MainProps {
 	onBlur?: any;
 	onChange: any;
 	onFocus?: any;
+	onSelectionChange?: (value: React.Key) => void;
 	options: any[];
+	placeholder?: string;
 	predefinedValue?: string[] | string;
 	readOnly: boolean;
 	required?: boolean;
 	selectedKey: string;
 	showEmptyOption: boolean;
-	value: string[] | string;
+	tip?: string;
+	value?: string[] | string;
 	visible?: boolean;
 }
 
@@ -45,8 +50,10 @@ interface Option<T> {
 	value: T;
 }
 
-interface SelectProps extends Omit<MainProps, 'editingLanguageId' | 'value'> {
-	selectedKey: string;
+interface SelectProps
+	extends Omit<MainProps, 'editingLanguageId' | 'value' | 'selectedKey'> {
+	selectedKey?: string;
+	viewMode: unknown;
 }
 
 type MultiSelectItem = {

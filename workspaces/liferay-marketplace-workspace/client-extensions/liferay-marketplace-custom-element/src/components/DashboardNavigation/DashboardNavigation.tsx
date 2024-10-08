@@ -53,7 +53,10 @@ export function DashboardNavigation({
 							/>
 
 							<div className="dashboard-navigation-header-text-container">
-								<span className="dashboard-navigation-header-title">
+								<span
+									className="dashboard-navigation-header-title"
+									title={currentAccount?.name}
+								>
 									{currentAccount?.name}
 								</span>
 

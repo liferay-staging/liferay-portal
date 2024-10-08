@@ -22,46 +22,99 @@ import {toArray} from './selectOperations';
 import type {Locale} from '../types';
 
 function Select({
+	errorMessage,
+	id,
 	label,
 	name,
 	onChange,
+	onSelectionChange,
 	options,
+	placeholder,
 	predefinedValue,
 	readOnly,
 	required,
 	selectedKey,
+	showEmptyOption,
+	tip,
+	viewMode,
 }: SelectProps) {
+	const {activeTabTitle} = useFormState();
+	const [loading, setLoading] = useState<boolean>();
 	const [selectedLabel, setSelectedLabel] = useState('');
 	let newSelectedKey = selectedKey;
-	if (selectedKey === null) {
-		newSelectedKey = 'null';
+
+	if (!selectedKey?.length && showEmptyOption) {
+		newSelectedKey = 'chooseAnOption';
 	}
 
-	let selectedItem = newSelectedKey || predefinedValue;
-
-	if (selectedItem?.length === 0) {
-		selectedItem = '';
+	if (typeof selectedKey !== 'string' && selectedKey?.[0] === '') {
+		newSelectedKey = undefined;
 	}
-	else if (typeof (selectedItem as string) === 'string') {
+
+	let selectedItem: string | string[] | undefined = newSelectedKey;
+
+	if (newSelectedKey?.[0] !== undefined) {
 		selectedItem =
-			(newSelectedKey as string) || (predefinedValue as string) || '';
+			newSelectedKey ??
+			(predefinedValue?.length ? predefinedValue : undefined);
 	}
-	else {
-		selectedItem = newSelectedKey[0] || predefinedValue?.[0] || '';
+	else if (
+		(newSelectedKey === 'chooseAnOption' ||
+			newSelectedKey?.[0] === undefined) &&
+		predefinedValue?.[0] &&
+		!viewMode
+	) {
+		selectedItem = predefinedValue?.[0];
 	}
+	else if (viewMode) {
+		selectedItem = selectedItem ?? predefinedValue;
+	}
+
+	if (typeof selectedItem !== 'string') {
+		selectedItem = selectedItem?.[0];
+	}
+
+	const accessibleProps = {
+		...(label && {
+			'aria-labelledby': `${id ?? name}`,
+		}),
+		...(tip && {
+			'aria-describedby': `${id ?? name}_fieldHelp`,
+		}),
+		...(errorMessage && {
+			'aria-errormessage': `${id ?? name}_fieldError`,
+		}),
+		'aria-required': required,
+	};
+
+	useEffect(() => {
+		if (
+			!readOnly &&
+			activeTabTitle !== Liferay.Language.get('advanced') &&
+			!viewMode &&
+			name?.includes('predefinedValue')
+		) {
+			setLoading(true);
+			setTimeout(() => setLoading(false), 200);
+		}
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [options]);
 
 	useEffect(() => {
 		const selectedOption = options.find(
-			(option) => option.value === selectedKey
+			(option) => option.value === selectedItem?.[0]
 		);
 
 		if (selectedOption) {
 			setSelectedLabel(selectedOption.label);
 		}
+		else {
+			setSelectedLabel(Liferay.Language.get('choose-an-option'));
+		}
 
-		setSelectedLabel('');
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [selectedKey]);
+	}, [selectedKey, selectedItem]);
 
 	return (
 		<div
@@ -71,41 +124,56 @@ function Select({
 				value: selectedLabel,
 			})}
 		>
-			<Picker
-				aria-labelledby={name}
-				aria-required={required}
-				disabled={readOnly}
-				id="picker"
-				items={[{items: options, label}]}
-				onSelectionChange={(itemKey: React.Key) => {
-					let newItemKey: React.Key | null = itemKey;
+			{!loading && (
+				<Picker
+					{...accessibleProps}
+					data-testid={id}
+					disabled={readOnly}
+					items={[{items: options, label}]}
+					onSelectionChange={(itemKey: React.Key) => {
+						let newItemKey: React.Key | null = itemKey;
 
-					if ((itemKey as string)?.includes('$.')) {
-						newItemKey = '.';
+						if ((itemKey as string)?.includes('$.')) {
+							newItemKey = '.';
+						}
+
+						const field = options.find(
+							({value}) => value === newItemKey
+						);
+
+						if (field.value === 'chooseAnOption') {
+							onChange({}, []);
+						}
+						else {
+							onChange({}, [field.value]);
+						}
+
+						if (onSelectionChange) {
+							onSelectionChange(itemKey);
+						}
+					}}
+					placeholder={placeholder}
+					selectedKey={
+						selectedItem === null ? 'chooseAnOption' : selectedItem
 					}
-					else if (itemKey === 'null') {
-						newItemKey = null;
-					}
-
-					const field = options.find(
-						({value}) => value === newItemKey
-					);
-
-					onChange({}, [field.value]);
-				}}
-				placeholder={Liferay.Language.get('choose-an-option')}
-				selectedKey={selectedItem}
-			>
-				{(group) => (
-					<DropDown.Group header={group.label} items={group.items}>
-						{(item) => (
-							<Option disabled={item.disabled} key={item.value}>
-								{item.label}
-							</Option>
-						)}
-					</DropDown.Group>
-				)}
-			</Picker>
+				>
+					{(group) => (
+						<DropDown.Group
+							header={group.label}
+							items={group.items}
+						>
+							{(item) => (
+								<Option
+									disabled={item.disabled}
+									key={item.value}
+								>
+									{item.label}
+								</Option>
+							)}
+						</DropDown.Group>
+					)}
+				</Picker>
+			)}
 		</div>
 	);
 }
@@ -118,17 +186,20 @@ const Main = ({
 	multiple = false,
 	name,
 	onChange,
+	id,
+	onSelectionChange,
 	options = [],
+	placeholder = Liferay.Language.get('choose-an-option'),
 	predefinedValue = [],
 	readOnly = false,
 	showEmptyOption = true,
-	value = '',
+	value,
 	selectedKey,
 	...otherProps
 }: MainProps) => {
 	const {editingLanguageId}: {editingLanguageId: Locale} = useFormState();
 	const predefinedValueArray = toArray(predefinedValue);
-	const valueArray = toArray(value);
+	const valueArray = toArray(value as string | string[]);
 	const {viewMode} = useFormState();
 
 	const normalizedOptions = useMemo(
@@ -163,22 +234,24 @@ const Main = ({
 		]
 	);
 
-	let newValue = value;
+	let newValue: string | string[] | undefined = valueArray;
 	let newPredefinedValue = predefinedValueArray;
 
 	if (!multiple) {
 		if (
-			options.length &&
-			value[0] &&
-			!options.find((option) => option.value === value[0])
+			normalizedOptions.length &&
+			newValue?.[0] &&
+			!normalizedOptions.find((option) => option.value === newValue?.[0])
 		) {
-			newValue = '';
+			newValue = undefined;
 		}
 
 		if (
-			options.length &&
+			normalizedOptions.length &&
 			predefinedValueArray[0] &&
-			!options.find((option) => option.value === predefinedValueArray[0])
+			!normalizedOptions.find(
+				(option) => option.value === predefinedValueArray[0]
+			)
 		) {
 			newPredefinedValue = [];
 		}
@@ -199,7 +272,7 @@ const Main = ({
 						label={label}
 						localizedValue={undefined}
 						localizedValueEdited={undefined}
-						name={`${name}_field`}
+						name={name}
 						onChange={onChange}
 						options={normalizedOptions}
 						predefinedValue={predefinedValueArray}
@@ -216,23 +289,38 @@ const Main = ({
 				) : (
 					<Select
 						fixedOptions={fixedOptions}
+						id={id}
 						label={label}
 						localizedValue={undefined}
 						localizedValueEdited={undefined}
 						multiple={multiple}
-						name={`${name}_field`}
+						name={name}
 						onChange={onChange}
+						onSelectionChange={onSelectionChange}
 						options={normalizedOptions}
+						placeholder={placeholder}
 						predefinedValue={newPredefinedValue}
 						readOnly={readOnly}
 						required={otherProps.required}
-						selectedKey={selectedKey || (newValue as string)}
-						showEmptyOption={false}
+						selectedKey={selectedKey ?? newValue}
+						showEmptyOption={showEmptyOption}
+						viewMode={viewMode}
+						{...otherProps}
 					/>
 				)}
 			</ClayTooltipProvider>
 
-			<input name={name} type="hidden" value={newValue} />
+			<input
+				name={name}
+				type="hidden"
+				value={
+					multiple
+						? newValue
+						: newValue?.[0] === 'chooseAnOption'
+						? undefined
+						: newValue
+				}
+			/>
 		</FieldBase>
 	);
 };

@@ -8,6 +8,7 @@ package com.liferay.document.library.web.internal.display.context;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileShortcut;
 import com.liferay.document.library.kernel.model.DLFolder;
+import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileShortcutLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLFolderLocalServiceUtil;
@@ -72,7 +73,7 @@ public class CopyDLObjectsDisplayContext {
 
 		long[] dlObjectIds = getDLObjectIds();
 
-		if (ArrayUtil.isEmpty(dlObjectIds) || (dlObjectIds.length > 1)) {
+		if (ArrayUtil.isEmpty(dlObjectIds)) {
 			_dlObjectName = StringPool.BLANK;
 
 			return _dlObjectName;
@@ -82,7 +83,7 @@ public class CopyDLObjectsDisplayContext {
 			dlObjectIds[0]);
 
 		if (dlFileEntry != null) {
-			_dlObjectName = dlFileEntry.getTitle();
+			_dlObjectName = _getFolderName(dlFileEntry.getFolder());
 
 			return _dlObjectName;
 		}
@@ -91,7 +92,7 @@ public class CopyDLObjectsDisplayContext {
 			dlObjectIds[0]);
 
 		if (dlFolder != null) {
-			_dlObjectName = dlFolder.getName();
+			_dlObjectName = _getFolderName(dlFolder.getParentFolder());
 
 			return _dlObjectName;
 		}
@@ -99,7 +100,7 @@ public class CopyDLObjectsDisplayContext {
 		DLFileShortcut dlFileShortcut =
 			DLFileShortcutLocalServiceUtil.getDLFileShortcut(dlObjectIds[0]);
 
-		_dlObjectName = dlFileShortcut.getToTitle();
+		_dlObjectName = _getFolderName(dlFileShortcut.getDLFolder());
 
 		return _dlObjectName;
 	}
@@ -179,6 +180,17 @@ public class CopyDLObjectsDisplayContext {
 		folderItemSelectorCriterion.setShowMountFolder(false);
 
 		return folderItemSelectorCriterion;
+	}
+
+	private String _getFolderName(DLFolder dlFolder) {
+		if ((dlFolder == null) ||
+			(dlFolder.getFolderId() ==
+				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID)) {
+
+			return LanguageUtil.get(_httpServletRequest, "home");
+		}
+
+		return dlFolder.getName();
 	}
 
 	private Group _getGroup(long repositoryId) throws PortalException {

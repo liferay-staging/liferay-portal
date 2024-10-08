@@ -41,7 +41,8 @@ public class RowLayoutStructureItemImporter
 		RowStyledLayoutStructureItem rowStyledLayoutStructureItem =
 			(RowStyledLayoutStructureItem)
 				layoutStructure.addLayoutStructureItem(
-					pageElement.getId(), LayoutDataItemTypeConstants.TYPE_ROW,
+					layoutStructureItemImporterContext.getItemId(pageElement),
+					LayoutDataItemTypeConstants.TYPE_ROW,
 					layoutStructureItemImporterContext.getParentItemId(),
 					layoutStructureItemImporterContext.getPosition());
 

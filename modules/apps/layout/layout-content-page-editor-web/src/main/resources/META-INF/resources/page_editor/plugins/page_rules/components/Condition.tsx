@@ -3,16 +3,17 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import {ScreenReaderAnnouncerContext} from '@liferay/layout-js-components-web';
 import {sub} from 'frontend-js-web';
-import React, {ComponentProps, FC, useContext} from 'react';
+import React, {ComponentProps, FC, useContext, useRef} from 'react';
 
 import {config} from '../../../app/config/index';
 import RulesService from '../../../app/services/RulesService';
 import {CACHE_KEYS} from '../../../app/utils/cache';
 import useCache from '../../../app/utils/useCache';
+import useConditionValues from '../../../app/utils/useConditionValues';
 import RuleBuilderItem from './RuleBuilderItem';
 import RuleSelect from './RuleSelect';
-import {ScreenReaderAnnouncerContext} from './ScreenReaderContext';
 
 export interface Condition {
 	condition?: 'user' | 'role' | 'segment';
@@ -33,7 +34,7 @@ const TYPE_VALUES = {
 	user: 'user',
 } as const;
 
-const TYPE_ITEMS = [
+export const CONDITION_TYPE_ITEMS = [
 	{
 		label: Liferay.Language.get('user'),
 		value: TYPE_VALUES.user,
@@ -46,7 +47,7 @@ const CONDITION_VALUES = {
 	user: 'user',
 } as const;
 
-const CONDITION_ITEMS = {
+export const CONDITION_ITEMS = {
 	[TYPE_VALUES.user]: [
 		{
 			label: Liferay.Language.get('is-the-user'),
@@ -86,9 +87,24 @@ export default function Condition({
 		? VALUE_SELECTOR_COMPONENTS[condition.condition]
 		: null;
 
+	const [{description}] = useConditionValues({conditions: [condition]});
+
+	const selectRef = useRef<HTMLButtonElement | undefined>();
+
+	const completeConditon = !!condition.value;
+
 	return (
 		<RuleBuilderItem
+			aria-label={
+				completeConditon
+					? description
+					: Liferay.Language.get('incomplete-condition')
+			}
+			description={description}
 			onDeleteButtonClick={onDeleteCondition}
+			onItemSelected={() => {
+				selectRef.current?.focus();
+			}}
 			showDeleteButton={showDeleteButton}
 			type="condition"
 			wrapperRef={wrapperRef}
@@ -97,11 +113,12 @@ export default function Condition({
 				aria-label={Liferay.Language.get(
 					'select-item-for-the-condition'
 				)}
-				items={TYPE_ITEMS}
+				items={CONDITION_TYPE_ITEMS}
 				onSelectionChange={(type) =>
 					onConditionChange({...condition, type})
 				}
 				selectedKey={condition.type}
+				triggerRef={selectRef}
 			/>
 
 			{condition.type && CONDITION_ITEMS[condition.type] ? (

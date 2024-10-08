@@ -171,6 +171,13 @@ function DiagramBuilder() {
 			},
 			type: TYPES.UPDATE_MODEL_BUILDER_STRUCTURE,
 		});
+
+		dispatch({
+			payload: {
+				selectedObjectRelationshipId: newObjectRelationshipId,
+			},
+			type: TYPES.SET_SELECTED_OBJECT_RELATIONSHIP_EDGE,
+		});
 	};
 
 	return (
@@ -212,16 +219,22 @@ function DiagramBuilder() {
 				<Background color="#C0C1C3" gap={18} size={1} />
 
 				{!isLoadingObjectFolder ? (
-					<>
+					<div
+						className={classNames(
+							'lfr__object-model-builder-control-container',
+							{
+								'sidebars-closed': !showSidebars,
+								'sidebars-open': showSidebars,
+							}
+						)}
+					>
 						<Controls
-							className={classNames({
-								'lfr__object-model-builder-controls-sidebars-hidden': !showSidebars,
-								'lfr__object-model-builder-controls-sidebars-not-hidden': showSidebars,
-							})}
+							className="lfr__object-model-builder-controls"
 							showInteractive={false}
 						/>
 
 						<MiniMap
+							className="lfr__object-model-builder-minimap"
 							maskColor="none"
 							nodeBorderRadius={8}
 							nodeColor="#F7F8F9"
@@ -233,7 +246,7 @@ function DiagramBuilder() {
 								borderRadius: '8px',
 							}}
 						/>
-					</>
+					</div>
 				) : (
 					<div className="lfr-objects__model-builder-diagram-area-loading">
 						<span

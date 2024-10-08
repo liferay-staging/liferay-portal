@@ -226,6 +226,9 @@ public class LayoutActionDropdownItemsProvider {
 						return portletDisplay.getId();
 					}
 				).setParameter(
+					"backURLTitle",
+					LanguageUtil.get(_themeDisplay.getLocale(), "pages")
+				).setParameter(
 					"segmentsExperienceId",
 					SegmentsExperienceLocalServiceUtil.
 						fetchDefaultSegmentsExperienceId(layout.getPlid())
@@ -496,6 +499,9 @@ public class LayoutActionDropdownItemsProvider {
 
 						return portletDisplay.getId();
 					}
+				).setParameter(
+					"backURLTitle",
+					LanguageUtil.get(_themeDisplay.getLocale(), "pages")
 				).buildString());
 			dropdownItem.setIcon("upload");
 			dropdownItem.setLabel(
@@ -527,6 +533,9 @@ public class LayoutActionDropdownItemsProvider {
 
 						return portletDisplay.getId();
 					}
+				).setParameter(
+					"backURLTitle",
+					LanguageUtil.get(_themeDisplay.getLocale(), "pages")
 				).buildString());
 			dropdownItem.setIcon("download");
 			dropdownItem.setLabel(

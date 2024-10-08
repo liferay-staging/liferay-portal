@@ -18,7 +18,6 @@ import {Liferay} from '../../liferay/liferay';
 import zodSchema from '../../schema/zod';
 import ProductCard from '../GetAppPage/components/ProductCard/ProductCard';
 import StepWizard from '../GetAppPage/components/StepWizard/StepWizard';
-import useGetProductCreatorAccount from '../GetAppPage/hooks/useGetProductCreatorAccount';
 import useProvisioningKoroneikiOAuth2 from '../GetAppPage/hooks/useProvisioningKoroneikiOAuth2';
 import {formatDate} from '../PublishedAppsDashboard/PublishedDashboardPageUtil';
 import AccountEmailInfo from './AccountInfo';
@@ -51,7 +50,9 @@ const ExtendBanner: React.FC<ExtendBannerProps> = ({subscription}) => (
 			</small>
 			<small className="col-6 col-md-4 subscription-banner-text text-nowrap">
 				{formatDate(subscription?.startDate)} &ndash;{' '}
-				{subscription?.endDate ?? 'DNE'}
+				{subscription?.endDate
+					? formatDate(subscription?.endDate)
+					: 'DNE'}
 			</small>
 		</div>
 	</>
@@ -77,12 +78,12 @@ const CreateLicense = () => {
 	const [step, setStep] = useState<string>(StepCreateLicense.SUBSCRIPTION);
 	const {orderId} = useParams();
 	const {myUserAccount} = useMarketplaceContext();
-	const {data} = useGetProductByOrderId(orderId);
+	const {data} = useGetProductByOrderId(orderId as string);
 
 	const navigate = useNavigate();
 	const product = data?.product;
 
-	const productCreatorAccount = useGetProductCreatorAccount(product);
+	const productCreatorAccountName: string = product?.catalogName || '';
 	const provisioningKoroneikiOAuth2 = useProvisioningKoroneikiOAuth2();
 
 	const {
@@ -115,7 +116,7 @@ const CreateLicense = () => {
 
 			setValue(
 				'description',
-				`${givenName} ${familyName} - ${product.name?.en_US} - ${subscription?.name}`
+				`${givenName} ${familyName} - ${product.name} - ${subscription?.name}`
 			);
 		}
 	}, [myUserAccount, product, setValue, subscription?.name]);
@@ -155,7 +156,7 @@ const CreateLicense = () => {
 					type: 'success',
 				});
 
-				navigate('/');
+				navigate(`/order/${orderId}/licenses`);
 
 				provisioningKoroneikiOAuth2.downloadLicenseKey(licenseKey.id);
 			}
@@ -225,8 +226,8 @@ const CreateLicense = () => {
 					RightSideBanner={() => (
 						<AccountEmailInfo userAccount={myUserAccount} />
 					)}
-					creatorAccount={productCreatorAccount as Account}
-					product={product as Product}
+					creatorAccountName={productCreatorAccountName}
+					product={product as DeliveryProduct}
 					showExtendBanner={
 						step === StepCreateLicense.LICENSE_KEY_DETAILS
 					}

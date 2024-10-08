@@ -37,7 +37,8 @@ public class FragmentDropZoneLayoutStructureItemImporter
 			fragmentDropZoneLayoutStructureItem =
 				(FragmentDropZoneLayoutStructureItem)
 					layoutStructure.addFragmentDropZoneLayoutStructureItem(
-						pageElement.getId(),
+						layoutStructureItemImporterContext.getItemId(
+							pageElement),
 						layoutStructureItemImporterContext.getParentItemId(),
 						layoutStructureItemImporterContext.getPosition());
 

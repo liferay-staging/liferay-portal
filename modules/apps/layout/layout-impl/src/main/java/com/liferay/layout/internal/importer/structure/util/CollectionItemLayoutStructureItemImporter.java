@@ -48,7 +48,7 @@ public class CollectionItemLayoutStructureItemImporter
 		}
 
 		return layoutStructure.addCollectionItemLayoutStructureItem(
-			pageElement.getId(),
+			layoutStructureItemImporterContext.getItemId(pageElement),
 			layoutStructureItemImporterContext.getParentItemId(),
 			layoutStructureItemImporterContext.getPosition());
 	}

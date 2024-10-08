@@ -5,9 +5,6 @@
 
 package com.liferay.marketplace;
 
-import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.CustomField;
-import com.liferay.headless.commerce.admin.catalog.client.dto.v1_0.Sku;
-import com.liferay.headless.commerce.admin.catalog.client.resource.v1_0.SkuResource;
 import com.liferay.osb.koroneiki.phloem.rest.client.dto.v1_0.ProductPurchase;
 import com.liferay.osb.koroneiki.phloem.rest.client.resource.v1_0.ProductPurchaseResource;
 import com.liferay.osb.provisioning.marketplace.rest.client.dto.v1_0.AppLicenseKey;
@@ -16,10 +13,6 @@ import com.liferay.osb.provisioning.marketplace.rest.client.pagination.Page;
 import com.liferay.osb.provisioning.marketplace.rest.client.pagination.Pagination;
 import com.liferay.osb.provisioning.marketplace.rest.client.resource.v1_0.AppLicenseKeyResource;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.StringBundler;
-import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.Validator;
 
 import java.net.URL;
 
@@ -28,7 +21,9 @@ import java.nio.charset.Charset;
 import java.time.ZonedDateTime;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.Objects;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -67,14 +62,17 @@ public class ProvisioningRestController extends BaseRestController {
 
 	@PostMapping("license-keys/{id}/deactivate")
 	public void deactivateLicenseKeys(
-			@AuthenticationPrincipal Jwt jwt, @PathVariable("id") String id)
+			@AuthenticationPrincipal Jwt jwt, @PathVariable("id") long id)
 		throws Exception {
 
 		_initResourceBuilders();
 
 		_appLicenseKeyResource.putAppLicenseKeyDeactivate(
-			jwt.getClaim("username"), jwt.getClaim("sub"),
-			new Long[] {GetterUtil.getLong(id)});
+			jwt.getClaim("username"), jwt.getClaim("sub"), new Long[] {id});
+
+		if (_log.isInfoEnabled()) {
+			_log.info("License key " + id + " deactivated");
+		}
 	}
 
 	@GetMapping("license-keys/{id}")
@@ -87,13 +85,13 @@ public class ProvisioningRestController extends BaseRestController {
 	}
 
 	@GetMapping("license-keys/{id}/download")
-	public ResponseEntity getLicenseKeysDownload(@PathVariable("id") String id)
+	public ResponseEntity getLicenseKeysDownload(@PathVariable("id") long id)
 		throws Exception {
 
 		_initResourceBuilders();
 
 		AppLicenseKey appLicenseKey = _appLicenseKeyResource.getAppLicenseKey(
-			GetterUtil.getLong(id));
+			id);
 
 		HttpInvoker.HttpResponse httpResponse =
 			_appLicenseKeyResource.getAppLicenseKeyDownloadHttpResponse(
@@ -101,17 +99,28 @@ public class ProvisioningRestController extends BaseRestController {
 
 		HttpHeaders httpHeaders = new HttpHeaders();
 
+		httpHeaders.setAccessControlExposeHeaders(
+			Collections.singletonList("Content-Disposition"));
 		httpHeaders.setCacheControl(
 			"must-revalidate, post-check=0, pre-check=0");
+
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("activation-key-");
+		sb.append(appLicenseKey.getProductName());
+		sb.append(StringPool.DASH);
+		sb.append(appLicenseKey.getProductVersion());
+		sb.append(StringPool.DASH);
+		sb.append(appLicenseKey.getHostName());
+		sb.append(".xml");
+
 		httpHeaders.setContentDispositionFormData(
 			"attachment",
-			StringBundler.concat(
-				"activation-key-", appLicenseKey.getProductName(),
-				StringPool.DASH, appLicenseKey.getProductVersion(),
-				StringPool.DASH, appLicenseKey.getHostName(), ".xml"
+			sb.toString(
 			).replaceAll(
 				StringPool.SPACE, StringPool.DASH
 			).toLowerCase());
+
 		httpHeaders.setContentType(MediaType.TEXT_XML);
 
 		return new ResponseEntity(
@@ -121,18 +130,15 @@ public class ProvisioningRestController extends BaseRestController {
 	@GetMapping("order-license-keys/{orderId}")
 	public Page<AppLicenseKey> getOrderLicenseKeys(
 			@PathVariable("orderId") String orderId,
-			@RequestParam(defaultValue = "1", required = false) String page,
-			@RequestParam(defaultValue = "20", required = false) String
-				pageSize)
+			@RequestParam(defaultValue = "1", required = false) int page,
+			@RequestParam(defaultValue = "20", required = false) int pageSize)
 		throws Exception {
 
 		_initResourceBuilders();
 
 		return _appLicenseKeyResource.getAppLicenseKeysPage(
 			"", "active eq true and orderId eq '" + orderId + "'",
-			Pagination.of(
-				GetterUtil.getInteger(page), GetterUtil.getInteger(pageSize)),
-			"");
+			Pagination.of(page, pageSize), "");
 	}
 
 	@PostMapping("license-keys")
@@ -154,7 +160,7 @@ public class ProvisioningRestController extends BaseRestController {
 
 		ProductPurchase productPurchase =
 			_productPurchaseResource.getProductPurchase(
-				jsonObject.getString("productPurchaseKey"));
+				appLicenseKey.getProductPurchaseKey());
 
 		Date expirationDate = productPurchase.getEndDate();
 
@@ -171,7 +177,7 @@ public class ProvisioningRestController extends BaseRestController {
 		AppLicenseKey.LicenseType licenseType =
 			AppLicenseKey.LicenseType.PRODUCTION;
 
-		if (StringUtil.equals(jsonObject.getString("type"), "developer")) {
+		if (Objects.equals(jsonObject.getString("type"), "developer")) {
 			licenseType = AppLicenseKey.LicenseType.DEVELOPER;
 		}
 
@@ -182,7 +188,6 @@ public class ProvisioningRestController extends BaseRestController {
 		appLicenseKey.setProductName(
 			productPurchase.getProduct(
 			).getName());
-		appLicenseKey.setProductVersion(_getVersion(jsonObject, jwt));
 
 		Date startDate = productPurchase.getStartDate();
 
@@ -191,16 +196,21 @@ public class ProvisioningRestController extends BaseRestController {
 		}
 
 		appLicenseKey.setStartDate(startDate);
-
 		appLicenseKey.setUserName((String)jwt.getClaim("username"));
 		appLicenseKey.setUserUuid((String)jwt.getClaim("sub"));
 
-		return _appLicenseKeyResource.postAppLicenseKey(
+		appLicenseKey = _appLicenseKeyResource.postAppLicenseKey(
 			jwt.getClaim("username"), jwt.getClaim("sub"), appLicenseKey);
+
+		if (_log.isInfoEnabled()) {
+			_log.info("Created app license key " + appLicenseKey);
+		}
+
+		return appLicenseKey;
 	}
 
 	private String _getOAuthAuthorization() throws Exception {
-		if (Validator.isNotNull(_oauthAccessToken) &&
+		if ((_oauthAccessToken != null) &&
 			(System.currentTimeMillis() < (_oauthExpirationMillis - 15000))) {
 
 			return _oauthAccessToken;
@@ -250,36 +260,6 @@ public class ProvisioningRestController extends BaseRestController {
 
 			return _oauthAccessToken;
 		}
-	}
-
-	private String _getVersion(JSONObject jsonObject, Jwt jwt) {
-		String version = "1.0.0";
-
-		try {
-			SkuResource skuResource = SkuResource.builder(
-			).header(
-				HttpHeaders.AUTHORIZATION, jwt.getTokenValue()
-			).endpoint(
-				new URL(lxcDXPServerProtocol + "://" + lxcDXPMainDomain)
-			).build();
-
-			Sku sku = skuResource.getSku(jsonObject.getLong("skuId"));
-
-			for (CustomField customField : sku.getCustomFields()) {
-				if (StringUtil.equals(customField.getName(), "Version")) {
-					version = customField.getCustomValue(
-					).getData(
-					).toString();
-
-					break;
-				}
-			}
-		}
-		catch (Exception exception) {
-			_log.error("Unable to set SKU Version" + exception.getMessage());
-		}
-
-		return version;
 	}
 
 	private void _initResourceBuilders() throws Exception {
